@@ -1,0 +1,2765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-navbutton-color" content="#2c3e50">
+
+    <title>RosaVel Gestor Empresarial Móvil</title>
+
+    <!-- Enlace al archivo manifest.json para PWA -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icono Base64 para favicon o Apple Touch Icon (EJEMPLO - NO RECOMENDADO PARA TODOS LOS ICONOS PWA) -->
+    <!-- Este es un icono PNG 16x16 muy simple codificado en Base64. -->
+    <!-- Para iconos PWA definidos en manifest.json, se recomienda usar archivos .png reales -->
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7PTF5sAAAAaVBMVEUAAADuVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCr///+0sB1yAAAAIHRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobLqXn+AAAAFhJREFUGNNjYGBgZGIiYGBkZGBgYBDIwMAAAk0AA1dFm/gAAAAASUVORK5CYII=" type="image/png">
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7PTF5sAAAAaVBMVEUAAADuVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCruVCr///+0sB1yAAAAIHRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobLqXn+AAAAFhJUGNNjYGBgZGIiYGBkZGBgYBDIwMAAAk0AA1dFm/gAAAAASUVORK5CYII=">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --info: #17a2b8;
+            --secondary-rgb: 52, 152, 219;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            background: var(--light);
+            font-size: 16px;
+            padding-top: 50px;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .barra-tipo-cambio {
+            background: var(--secondary);
+            color: white;
+            padding: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .barra-tipo-cambio marquee {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .app-container {
+            padding: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .modulo-seccion {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        .modulo-seccion.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2, h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn-movil {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-movil:active {
+            transform: scale(0.96);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary { background-color: var(--primary); }
+        .btn-secondary { background-color: var(--secondary); }
+        .btn-success { background-color: var(--success); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-warning { background-color: var(--warning); }
+        .btn-info { background-color: var(--info); }
+
+        .btn-movil:hover {
+            opacity: 0.9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+            background-color: #f9f9f9;
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .tabla-movil {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.95em;
+        }
+
+        .tabla-movil th, .tabla-movil td {
+            border: 1px solid #eee;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .tabla-movil th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+
+        .tabla-movil tr:nth-child(even) {
+            background-color: #f6f6f6;
+        }
+
+        .tabla-movil tr:hover {
+            background-color: #eef;
+            cursor: pointer;
+        }
+
+        .mini-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1050;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mini-modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            animation: scaleIn 0.3s ease-out;
+            position: relative;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .mini-modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .mini-modal-close-btn:hover {
+            color: #333;
+        }
+
+        .mini-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .mini-modal-buttons .btn-movil {
+            width: auto;
+            padding: 10px 20px;
+            margin-bottom: 0;
+        }
+
+        .flex-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .flex-container .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .resumen-venta {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .resumen-venta p {
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .resumen-venta p strong {
+            color: var(--primary);
+        }
+
+        .lista-productos-venta {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+            border-top: 1px dashed #ddd;
+            padding-top: 10px;
+        }
+
+        .lista-productos-venta li {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .lista-productos-venta li .item-info {
+            flex-grow: 1;
+        }
+
+        .lista-productos-venta li .item-actions {
+            margin-left: 15px;
+        }
+
+        .lista-productos-venta li button {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .lista-productos-venta li button:hover {
+            background: #c0392b;
+        }
+
+        #confirm-exit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #confirm-exit-modal .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        #confirm-exit-modal h3 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        #confirm-exit-modal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        #confirm-exit-modal .btn-confirm {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #confirm-exit-modal .btn-confirm:hover {
+            opacity: 0.9;
+        }
+
+        #confirm-exit-modal .btn-yes {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        #confirm-exit-modal .btn-no {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        body.dark-mode {
+            background: #121212;
+            color: #f5f5f5;
+        }
+
+        body.dark-mode .modulo-seccion,
+        body.dark-mode .mini-modal-content,
+        body.dark-mode #confirm-exit-modal .modal-content {
+            background: #1e1e1e;
+            color: #f5f5f5;
+        }
+
+        body.dark-mode .form-input,
+        body.dark-mode .form-select,
+        body.dark-mode .form-textarea {
+            background: #2d2d2d;
+            color: #f5f5f5;
+            border-color: #444;
+        }
+
+        body.dark-mode .tabla-movil th {
+            background-color: #2d2d2d;
+        }
+
+        body.dark-mode .tabla-movil th,
+        body.dark-mode .tabla-movil td {
+            border-color: #444;
+        }
+
+        body.dark-mode .form-label {
+            color: #f5f5f5;
+        }
+
+        body.dark-mode .resumen-venta {
+            background-color: #2d2d2d;
+            border-color: #444;
+        }
+
+        body.dark-mode .lista-productos-venta li {
+            background-color: #252525;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        body.dark-mode .barra-tipo-cambio {
+            background: #000;
+            box-shadow: 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            padding-left: 40px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            background-color: #f9f9f9;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .event-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .event-item.upcoming {
+            border-left: 5px solid var(--info);
+        }
+        .event-item.past {
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+        .event-item.ringing {
+            background-color: var(--warning);
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { box-shadow: 0 0 0 0px var(--warning); }
+            to { box-shadow: 0 0 0 10px rgba(243,156,18,0); }
+        }
+        .event-item h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        .event-item p {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .event-item .event-actions {
+            text-align: right;
+            margin-top: 10px;
+        }
+        .event-item .event-actions button {
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        body.dark-mode .event-item {
+            background-color: #252525;
+            border-color: #444;
+        }
+        body.dark-mode .event-item h4 {
+            color: #f5f5f5;
+        }
+        body.dark-mode .event-item p {
+            color: #ccc;
+        }
+
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+        .fab-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .fab-button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+        .fab-button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-back-to-main {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--info);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            z-index: 900;
+        }
+        .btn-back-to-main:hover {
+            opacity: 0.9;
+        }
+        .btn-back-to-main:active {
+            transform: scale(0.95);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--light);
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            color: var(--dark);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--secondary);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        body.dark-mode .modal-content {
+            background-color: var(--dark);
+            color: var(--light);
+            border: 1px solid var(--primary);
+        }
+
+        .modal-content h2 {
+            color: var(--danger);
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 1em;
+        }
+
+        .modal-content p:last-of-type {
+            margin-bottom: 25px;
+        }
+
+        .countdown-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+            background-color: rgba(var(--secondary-rgb), 0.1);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 20px auto;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        .modal-content .btn-movil {
+            margin-top: 15px;
+            padding: 10px 25px;
+            font-size: 1.1em;
+            border-radius: 5px;
+        }
+
+        .ai-output-box {
+            background-color: #f0f8ff;
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-style: italic;
+            color: #336699;
+            text-align: left;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        body.dark-mode .ai-output-box {
+            background-color: #2a2a3a;
+            border-color: #4a4a5a;
+            color: #bbccdd;
+        }
+    </style>
+</head>
+<body>
+    <div id="prueba-popup-overlay" class="modal-overlay">
+        <div id="prueba-popup" class="modal-content">
+            <h2>¡ATENCIÓN: APLICACIÓN DE PRUEBA!</h2>
+            <p>Esta es una aplicación de prueba.</p>
+            <p>Si necesita una aplicación totalmente funcional y con todas las herramientas para su negocio, por favor, contacte al siguiente número:</p>
+            <p style="font-size: 1.5em; font-weight: bold; color: var(--success);">0416 320 9628</p>
+            <p>La aplicación se bloqueará automáticamente después de:</p>
+            <div id="countdown-timer" class="countdown-display"></div>
+            <button class="btn-movil btn-primary" id="cerrar-prueba-popup">Entendido</button>
+        </div>
+    </div>
+
+    <div id="bloqueo-popup-overlay" class="modal-overlay">
+        <div id="bloqueo-popup" class="modal-content">
+            <h2>APLICACIÓN BLOQUEADA</h2>
+            <p>El período de prueba ha terminado.</p>
+            <p>Si desea recuperar el acceso a la aplicación y contratar nuestros servicios, por favor, llame ya para activar con la compra de un código:</p>
+            <p style="font-size: 1.8em; font-weight: bold; color: var(--success);">0416 320 9628</p>
+        </div>
+    </div>
+
+    <div class="barra-tipo-cambio">
+        <marquee id="tipo-cambio-marquee">Cargando tipo de cambio...</marquee>
+    </div>
+
+    <div class="app-container">
+        <div id="main-menu" class="modulo-seccion active">
+            <h2>Menú Principal</h2>
+            <button class="btn-movil btn-primary" onclick="mostrarSeccion('seccion-ventas')">Gestión de Ventas</button>
+            <button class="btn-movil btn-secondary" onclick="mostrarSeccion('seccion-inventario')">Gestión de Inventario</button>
+            <button class="btn-movil btn-success" onclick="mostrarSeccion('seccion-clientes')">Gestión de Clientes</button>
+            <button class="btn-movil btn-info" onclick="mostrarSeccion('seccion-proveedores')">Gestión de Proveedores</button>
+            <button class="btn-movil btn-warning" onclick="mostrarSeccion('seccion-contabilidad')">Contabilidad</button>
+            <button class="btn-movil btn-primary" onclick="mostrarSeccion('seccion-facturacion')">Facturación</button>
+            <button class="btn-movil btn-secondary" onclick="mostrarSeccion('seccion-reportes')">Reportes</button>
+            <button class="btn-movil btn-primary" onclick="mostrarSeccion('seccion-ajustes')">Ajustes</button>
+        </div>
+
+        <div id="seccion-ventas" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Nueva Venta</h3>
+            <div class="form-group">
+                <label for="cliente-venta" class="form-label">Cliente:</label>
+                <input type="text" id="cliente-venta" class="form-input" list="lista-clientes-venta" placeholder="Buscar o añadir cliente">
+                <datalist id="lista-clientes-venta"></datalist>
+            </div>
+
+            <button class="btn-movil btn-primary" onclick="mostrarMiniModalAgregarProducto()">Añadir Producto a Venta</button>
+
+            <h4>Productos en Venta</h4>
+            <ul id="productos-en-venta-lista" class="lista-productos-venta">
+                </ul>
+
+            <div class="resumen-venta">
+                <p>Total USD: <strong id="total-usd">0.00</strong></p>
+                <p>Total VES: <strong id="total-ves">0.00</strong></p>
+            </div>
+
+            <button class="btn-movil btn-success" onclick="procesarVenta()">Procesar Venta</button>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-agregar-producto" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalAgregarProducto()">&times;</button>
+                <h3>Añadir Producto</h3>
+                <div class="form-group">
+                    <label for="producto-input" class="form-label">Producto:</label>
+                    <input type="text" id="producto-input" class="form-input" list="lista-productos-datalist" placeholder="Buscar producto...">
+                    <datalist id="lista-productos-datalist"></datalist>
+                </div>
+                <div class="form-group">
+                    <label for="cantidad-producto" class="form-label">Cantidad:</label>
+                    <input type="number" id="cantidad-producto" class="form-input" min="1" value="1">
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="agregarProductoAVenta()">Añadir</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalAgregarProducto()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-inventario" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Gestión de Inventario</h3>
+            <button class="btn-movil btn-primary" onclick="mostrarMiniModalProducto()">Añadir Nuevo Producto</button>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-producto" placeholder="Buscar producto..." onkeyup="filtrarProductos()">
+            </div>
+            <table class="tabla-movil">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Precio (USD)</th>
+                        <th>Stock</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="inventario-lista">
+                    </tbody>
+            </table>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-producto" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalProducto()">&times;</button>
+                <h3 id="modal-producto-titulo">Añadir Producto</h3>
+                <input type="hidden" id="producto-id-editar">
+                <div class="form-group">
+                    <label for="producto-nombre" class="form-label">Nombre:</label>
+                    <input type="text" id="producto-nombre" class="form-input">
+                </div>
+                <div class="flex-container">
+                    <div class="form-group">
+                        <label for="producto-precio" class="form-label">Precio (USD):</label>
+                        <input type="number" id="producto-precio" class="form-input" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="producto-stock" class="form-label">Stock:</label>
+                        <input type="number" id="producto-stock" class="form-input" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="producto-descripcion-ia" class="form-label">Descripción del Producto (Generada con IA):</label>
+                    <textarea id="producto-descripcion-ia" class="form-textarea" placeholder="Descripción generada por IA..."></textarea>
+                    <button class="btn-movil btn-info" style="margin-top: 10px;" onclick="generarDescripcionProducto()">Generar Descripción con IA ✨</button>
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="guardarProducto()">Guardar Producto</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalProducto()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-clientes" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Gestión de Clientes</h3>
+            <button class="btn-movil btn-primary" onclick="mostrarMiniModalCliente()">Añadir Nuevo Cliente</button>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-cliente" placeholder="Buscar cliente..." onkeyup="filtrarClientes()">
+            </div>
+            <table class="tabla-movil">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Teléfono</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="clientes-lista">
+                    </tbody>
+            </table>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-cliente" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalCliente()">&times;</button>
+                <h3 id="modal-cliente-titulo">Añadir Cliente</h3>
+                <input type="hidden" id="cliente-id-editar">
+                <div class="form-group">
+                    <label for="cliente-nombre" class="form-label">Nombre:</label>
+                    <input type="text" id="cliente-nombre" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="cliente-telefono" class="form-label">Teléfono:</label>
+                    <input type="text" id="cliente-telefono" class="form-input">
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalCliente()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-proveedores" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Gestión de Proveedores</h3>
+            <button class="btn-movil btn-primary" onclick="mostrarMiniModalProveedor()">Añadir Nuevo Proveedor</button>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-proveedor" placeholder="Buscar proveedor..." onkeyup="filtrarProveedores()">
+            </div>
+            <table class="tabla-movil">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Contacto</th>
+                        <th>Teléfono</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="proveedores-lista">
+                    </tbody>
+            </table>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-proveedor" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalProveedor()">&times;</button>
+                <h3 id="modal-proveedor-titulo">Añadir Proveedor</h3>
+                <input type="hidden" id="proveedor-id-editar">
+                <div class="form-group">
+                    <label for="proveedor-nombre" class="form-label">Nombre:</label>
+                    <input type="text" id="proveedor-nombre" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="proveedor-contacto" class="form-label">Persona de Contacto:</label>
+                    <input type="text" id="proveedor-contacto" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="proveedor-telefono" class="form-label">Teléfono:</label>
+                    <input type="text" id="proveedor-telefono" class="form-input">
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="guardarProveedor()">Guardar Proveedor</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalProveedor()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-contabilidad" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Contabilidad</h3>
+            <button class="btn-movil btn-info" onclick="mostrarMiniModalTransaccion()">Añadir Transacción</button>
+            <div class="resumen-venta" style="margin-top: 20px;">
+                <p>Balance Total (USD): <strong id="balance-total-usd">0.00</strong></p>
+                <p>Balance Total (VES): <strong id="balance-total-ves">0.00</strong></p>
+            </div>
+            <h4>Transacciones Recientes</h4>
+            <table class="tabla-movil">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Monto (USD)</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-transacciones">
+                    </tbody>
+            </table>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-transaccion" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalTransaccion()">&times;</button>
+                <h3>Añadir Transacción</h3>
+                <input type="hidden" id="transaccion-id-editar">
+                <div class="form-group">
+                    <label for="transaccion-tipo" class="form-label">Tipo:</label>
+                    <select id="transaccion-tipo" class="form-select">
+                        <option value="ingreso">Ingreso</option>
+                        <option value="egreso">Egreso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaccion-monto" class="form-label">Monto (USD):</label>
+                    <input type="number" id="transaccion-monto" class="form-input" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="transaccion-descripcion" class="form-label">Descripción:</label>
+                    <input type="text" id="transaccion-descripcion" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="transaccion-fecha" class="form-label">Fecha:</label>
+                    <input type="date" id="transaccion-fecha" class="form-input">
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="guardarTransaccion()">Guardar Transacción</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalTransaccion()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="seccion-facturacion" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Historial de Facturación</h3>
+            <p>Aquí se listarán las ventas procesadas que cumplen como "facturas".</p>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-factura" placeholder="Buscar factura por cliente..." onkeyup="filtrarFacturas()">
+            </div>
+            <table class="tabla-movil">
+                <thead>
+                    <tr>
+                        <th>ID Factura</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Total USD</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-facturas">
+                    </tbody>
+            </table>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="seccion-reportes" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Reportes</h3>
+            <div class="form-group">
+                <label for="reporte-tipo" class="form-label">Tipo de Reporte:</label>
+                <select id="reporte-tipo" class="form-select" onchange="generarReporte()">
+                    <option value="ventas-dia">Ventas del Día</option>
+                    <option value="productos-vendidos">Productos Más Vendidos</option>
+                    <option value="ventas-cliente">Ventas por Cliente</option>
+                </select>
+            </div>
+            <button class="btn-movil btn-info" id="summarize-report-btn" style="display:none;" onclick="summarizeReport()">Resumir Reporte con IA ✨</button>
+            <div id="reporte-contenido">
+                <p>Selecciona un tipo de reporte para visualizar los datos.</p>
+            </div>
+            <div id="reporte-resumen-ia" class="ai-output-box" style="display:none;">
+                <h4>Resumen del Reporte (IA)</h4>
+                <p id="reporte-resumen-texto"></p>
+            </div>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="seccion-ajustes" class="modulo-seccion">
+            <button class="btn-back-to-main" onclick="volverAlMenuPrincipal()">🏠</button>
+            <h3>Ajustes</h3>
+            <div class="form-group">
+                <label for="api-key" class="form-label">API Key de Tasa de Cambio:</label>
+                <input type="text" id="api-key" class="form-input" placeholder="'https://api.exchangerate-api.com/v6/{YOUR_API_KEY}/latest/USD'">
+                <small style="display: block; margin-top: 5px; color: #666;">Necesaria para la actualización automática del tipo de cambio. Puedes obtenerla en <a href="https://www.exchangerate-api.com" target="_blank">exchangerate-api.com</a></small>
+            </div>
+            <button class="btn-movil btn-primary" onclick="guardarAPIKey()">Guardar API Key</button>
+            <button class="btn-movil btn-secondary" onclick="obtenerTipoCambio()">Actualizar Tipo de Cambio Ahora</button>
+
+            <hr style="margin: 30px 0; border-color: #eee;">
+
+            <h4>Configuración de la Interfaz</h4>
+            <button class="btn-movil btn-info" onclick="toggleTheme()">Cambiar Tema (Oscuro/Claro)</button>
+            <button class="btn-movil btn-primary" onclick="toggleFullscreen()">Activar/Desactivar Pantalla Completa</button>
+
+            <hr style="margin: 30px 0; border-color: #eee;">
+
+            <h4>Eventos, Alarmas y Notificaciones</h4>
+            <button class="btn-movil btn-info" onclick="mostrarMiniModalEvento()">Añadir Nuevo Evento/Alarma</button>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-evento" placeholder="Buscar evento..." onkeyup="filtrarEventos()">
+            </div>
+            <div id="lista-eventos" style="margin-top: 15px;">
+                <p style="text-align: center; color: #777;">No hay eventos programados.</p>
+            </div>
+
+            <hr style="margin: 30px 0; border-color: #eee;">
+
+            <button class="btn-movil btn-danger" onclick="resetearDatos()">Resetear Todos los Datos</button>
+            <button class="btn-movil btn-secondary" onclick="volverAlMenuPrincipal()">Volver</button>
+        </div>
+
+        <div id="mini-modal-evento" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalEvento()">&times;</button>
+                <h3 id="modal-evento-titulo">Añadir Evento</h3>
+                <input type="hidden" id="evento-id-editar">
+                <div class="form-group">
+                    <label for="evento-titulo" class="form-label">Título del Evento:</label>
+                    <input type="text" id="evento-titulo" class="form-input">
+                </div>
+                <button class="btn-movil btn-info" style="margin-top: 10px; margin-bottom: 15px;" onclick="generarIdeasEvento()">Generar Ideas de Evento ✨</button>
+                <div class="form-group">
+                    <label for="evento-descripcion" class="form-label">Descripción:</label>
+                    <textarea id="evento-descripcion" class="form-textarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="evento-fecha" class="form-label">Fecha:</label>
+                    <input type="date" id="evento-fecha" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="evento-hora" class="form-label">Hora:</label>
+                    <input type="time" id="evento-hora" class="form-input">
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-primary" onclick="guardarEvento()">Guardar Evento</button>
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalEvento()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mini-modal-event-ideas" class="mini-modal">
+            <div class="mini-modal-content">
+                <button class="mini-modal-close-btn" onclick="ocultarMiniModalEventIdeas()">&times;</button>
+                <h3>Ideas de Evento Generadas ✨</h3>
+                <div class="ai-output-box" id="event-ideas-output">
+                    <p>Cargando ideas...</p>
+                </div>
+                <div class="mini-modal-buttons">
+                    <button class="btn-movil btn-secondary" onclick="ocultarMiniModalEventIdeas()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="confirm-exit-modal">
+        <div class="modal-content">
+            <h3>¿Estás seguro que deseas salir?</h3>
+            <p>Si tienes una venta en proceso, los datos no guardados podrían perderse.</p>
+            <div class="modal-buttons">
+                <button class="btn-confirm btn-yes" onclick="confirmExit(true)">Sí, salir</button>
+                <button class="btn-confirm btn-no" onclick="confirmExit(false)">No, quedarme</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-notification" class="toast"></div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p id="loading-text">Procesando...</p>
+    </div>
+
+    <audio id="alarm-sound" src="https://www.soundjay.com/misc/sounds/alarm-clock-01.mp3" preload="auto"></audio>
+
+    <div id="fab-ventas" class="fab-container">
+        <button class="fab-button" onclick="mostrarSeccion('seccion-ventas')">
+            🛒
+        </button>
+    </div>
+
+    <script>
+        let db = {
+            productos: [],
+            clientes: [],
+            ventas: [],
+            proveedores: [],
+            transacciones: [],
+            eventos: [],
+            tipoCambioReal: 0,
+            tipoCambioCalculo: 0,
+            apiKey: ''
+        };
+
+        let productosEnVenta = [];
+        let currentSection = 'main-menu';
+        let backButtonPressedOnce = false;
+
+        let alarmInterval;
+
+        const TRIAL_DURATION_MS = 24 * 60 * 60 * 1000;
+        const TRIAL_START_KEY = 'rosavel_trial_start_time';
+        const APP_LOCKED_KEY = 'rosavel_app_locked';
+        let trialStartTime = null;
+        let countdownInterval = null;
+
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast-notification');
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function showLoading(message = 'Procesando...') {
+            document.getElementById('loading-text').textContent = message;
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        function showExitConfirmation() {
+            document.getElementById('confirm-exit-modal').style.display = 'flex';
+        }
+
+        function confirmExit(shouldExit) {
+            document.getElementById('confirm-exit-modal').style.display = 'none';
+            if (shouldExit) {
+                showToast('Sesión finalizada. Puedes cerrar la aplicación.', 3000);
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+
+            const themeColor = isDarkMode ? '#121212' : '#2c3e50';
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
+
+            showToast(isDarkMode ? 'Modo oscuro activado' : 'Modo claro activado');
+        }
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#121212');
+        }
+
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().then(() => {
+                    showToast('Modo pantalla completa desactivado');
+                }).catch(err => {
+                    showToast(`Error al salir de pantalla completa: ${err.message}`, 4000);
+                });
+            } else {
+                document.documentElement.requestFullscreen().then(() => {
+                    showToast('Modo pantalla completa activado');
+                }).catch(err => {
+                    showToast(`Error al activar pantalla completa: ${err.message}`, 4000);
+                });
+            }
+        }
+
+        function checkTrialStatus() {
+            const appLocked = localStorage.getItem(APP_LOCKED_KEY);
+            if (appLocked === 'true') {
+                showLockPopup();
+                return;
+            }
+
+            trialStartTime = localStorage.getItem(TRIAL_START_KEY);
+            if (!trialStartTime) {
+                trialStartTime = new Date('2025-06-05T16:39:00-04:00').getTime();
+                localStorage.setItem(TRIAL_START_KEY, trialStartTime);
+            } else {
+                trialStartTime = parseInt(trialStartTime);
+            }
+
+            const currentTime = Date.now();
+            const elapsedTime = currentTime - trialStartTime;
+
+            if (elapsedTime >= TRIAL_DURATION_MS) {
+                lockApp();
+            } else {
+                showTrialPopup(TRIAL_DURATION_MS - elapsedTime);
+            }
+        }
+
+        function showTrialPopup(remainingTime) {
+            const popupOverlay = document.getElementById('prueba-popup-overlay');
+            const countdownDisplay = document.getElementById('countdown-timer');
+            const closeButton = document.getElementById('cerrar-prueba-popup');
+
+            popupOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const elapsed = now - trialStartTime;
+                let remaining = TRIAL_DURATION_MS - elapsed;
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownDisplay.textContent = '00:00:00';
+                    lockApp();
+                    return;
+                }
+
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                remaining %= (1000 * 60 * 60);
+                const minutes = Math.floor(remaining / (1000 * 60));
+                remaining %= (1000 * 60);
+                const seconds = Math.floor(remaining / 1000);
+
+                countdownDisplay.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+
+            closeButton.onclick = () => {
+                popupOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            };
+        }
+
+        function lockApp() {
+            localStorage.setItem(APP_LOCKED_KEY, 'true');
+            document.getElementById('prueba-popup-overlay').classList.remove('active');
+            showLockPopup();
+
+            const appContentElement = document.querySelector('.app-container');
+            if (appContentElement) {
+                appContentElement.style.pointerEvents = 'none';
+                appContentElement.style.opacity = '0.4';
+                appContentElement.style.filter = 'grayscale(80%)';
+            }
+            document.querySelectorAll('.mini-modal, .mini-modal-overlay:not(#bloqueo-popup-overlay)').forEach(overlay => overlay.classList.remove('active'));
+            document.querySelectorAll('button, input, select, textarea').forEach(el => el.disabled = true);
+        }
+
+        function showLockPopup() {
+            const lockOverlay = document.getElementById('bloqueo-popup-overlay');
+            lockOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function mostrarSeccion(seccionId) {
+            if (localStorage.getItem(APP_LOCKED_KEY) === 'true') {
+                showLockPopup();
+                return;
+            }
+
+            document.querySelectorAll('.modulo-seccion').forEach(seccion => {
+                seccion.classList.remove('active');
+            });
+            document.getElementById(seccionId).classList.add('active');
+            currentSection = seccionId;
+
+            const fabVentas = document.getElementById('fab-ventas');
+            if (seccionId === 'main-menu') {
+                fabVentas.style.display = 'flex';
+            } else {
+                fabVentas.style.display = 'none';
+            }
+
+            if (seccionId === 'seccion-inventario') {
+                renderizarInventario();
+                filtrarProductos();
+            } else if (seccionId === 'seccion-clientes') {
+                renderizarClientes();
+                filtrarClientes();
+            } else if (seccionId === 'seccion-ventas') {
+                renderizarClientesDatalist();
+                renderizarProductosDatalist();
+                renderizarProductosEnVenta();
+            } else if (seccionId === 'seccion-reportes') {
+                generarReporte();
+                document.getElementById('summarize-report-btn').style.display = 'none';
+                document.getElementById('reporte-resumen-ia').style.display = 'none';
+            } else if (seccionId === 'seccion-proveedores') {
+                renderizarProveedores();
+                filtrarProveedores();
+            } else if (seccionId === 'seccion-contabilidad') {
+                renderizarTransacciones();
+                calcularBalance();
+            } else if (seccionId === 'seccion-facturacion') {
+                renderizarFacturas();
+                filtrarFacturas();
+            } else if (seccionId === 'seccion-ajustes') {
+                renderizarEventos();
+                document.getElementById('api-key').value = db.apiKey;
+            }
+        }
+
+        function volverAlMenuPrincipal() {
+            mostrarSeccion('main-menu');
+        }
+
+        function mostrarMiniModalProducto(productoId = null) {
+            const modal = document.getElementById('mini-modal-producto');
+            const titulo = document.getElementById('modal-producto-titulo');
+            const idInput = document.getElementById('producto-id-editar');
+            const nombreInput = document.getElementById('producto-nombre');
+            const precioInput = document.getElementById('producto-precio');
+            const stockInput = document.getElementById('producto-stock');
+            const descripcionIA = document.getElementById('producto-descripcion-ia');
+
+            idInput.value = '';
+            nombreInput.value = '';
+            precioInput.value = '';
+            stockInput.value = '';
+            descripcionIA.value = '';
+
+            if (productoId) {
+                const producto = db.productos.find(p => p.id === productoId);
+                if (producto) {
+                    titulo.textContent = 'Editar Producto';
+                    idInput.value = producto.id;
+                    nombreInput.value = producto.nombre;
+                    precioInput.value = producto.precio;
+                    stockInput.value = producto.stock;
+                    descripcionIA.value = producto.descripcionIA || '';
+                }
+            } else {
+                titulo.textContent = 'Añadir Producto';
+            }
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalProducto() {
+            document.getElementById('mini-modal-producto').style.display = 'none';
+        }
+
+        function mostrarMiniModalCliente(clienteId = null) {
+            const modal = document.getElementById('mini-modal-cliente');
+            const titulo = document.getElementById('modal-cliente-titulo');
+            const idInput = document.getElementById('cliente-id-editar');
+            const nombreInput = document.getElementById('cliente-nombre');
+            const telefonoInput = document.getElementById('cliente-telefono');
+
+            idInput.value = '';
+            nombreInput.value = '';
+            telefonoInput.value = '';
+
+            if (clienteId) {
+                const cliente = db.clientes.find(c => c.id === clienteId);
+                if (cliente) {
+                    titulo.textContent = 'Editar Cliente';
+                    idInput.value = cliente.id;
+                    nombreInput.value = cliente.nombre;
+                    telefonoInput.value = cliente.telefono;
+                }
+            } else {
+                titulo.textContent = 'Añadir Cliente';
+            }
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalCliente() {
+            document.getElementById('mini-modal-cliente').style.display = 'none';
+        }
+
+        function mostrarMiniModalProveedor(proveedorId = null) {
+            const modal = document.getElementById('mini-modal-proveedor');
+            const titulo = document.getElementById('modal-proveedor-titulo');
+            const idInput = document.getElementById('proveedor-id-editar');
+            const nombreInput = document.getElementById('proveedor-nombre');
+            const contactoInput = document.getElementById('proveedor-contacto');
+            const telefonoInput = document.getElementById('proveedor-telefono');
+
+            idInput.value = '';
+            nombreInput.value = '';
+            contactoInput.value = '';
+            telefonoInput.value = '';
+
+            if (proveedorId) {
+                const proveedor = db.proveedores.find(p => p.id === proveedorId);
+                if (proveedor) {
+                    titulo.textContent = 'Editar Proveedor';
+                    idInput.value = proveedor.id;
+                    nombreInput.value = proveedor.nombre;
+                    contactoInput.value = proveedor.contacto;
+                    telefonoInput.value = proveedor.telefono;
+                }
+            } else {
+                titulo.textContent = 'Añadir Proveedor';
+            }
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalProveedor() {
+            document.getElementById('mini-modal-proveedor').style.display = 'none';
+        }
+
+        function mostrarMiniModalTransaccion(transaccionId = null) {
+            const modal = document.getElementById('mini-modal-transaccion');
+            const idInput = document.getElementById('transaccion-id-editar');
+            const tipoInput = document.getElementById('transaccion-tipo');
+            const montoInput = document.getElementById('transaccion-monto');
+            const descripcionInput = document.getElementById('transaccion-descripcion');
+            const fechaInput = document.getElementById('transaccion-fecha');
+
+            idInput.value = '';
+            tipoInput.value = 'ingreso';
+            montoInput.value = '';
+            descripcionInput.value = '';
+            fechaInput.valueAsDate = new Date();
+
+            if (transaccionId) {
+                const transaccion = db.transacciones.find(t => t.id === transaccionId);
+                if (transaccion) {
+                    idInput.value = transaccion.id;
+                    tipoInput.value = transaccion.tipo;
+                    montoInput.value = transaccion.monto;
+                    descripcionInput.value = transaccion.descripcion;
+                    fechaInput.value = transaccion.fecha;
+                }
+            }
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalTransaccion() {
+            document.getElementById('mini-modal-transaccion').style.display = 'none';
+        }
+
+        function mostrarMiniModalEvento(eventoId = null) {
+            const modal = document.getElementById('mini-modal-evento');
+            const tituloModal = document.getElementById('modal-evento-titulo');
+            const idInput = document.getElementById('evento-id-editar');
+            const tituloInput = document.getElementById('evento-titulo');
+            const descripcionInput = document.getElementById('evento-descripcion');
+            const fechaInput = document.getElementById('evento-fecha');
+            const horaInput = document.getElementById('evento-hora');
+
+            idInput.value = '';
+            tituloInput.value = '';
+            descripcionInput.value = '';
+
+            const now = new Date();
+            fechaInput.value = now.toISOString().slice(0, 10);
+            horaInput.value = now.toTimeString().slice(0, 5);
+
+            if (eventoId) {
+                const evento = db.eventos.find(e => e.id === eventoId);
+                if (evento) {
+                    tituloModal.textContent = 'Editar Evento';
+                    idInput.value = evento.id;
+                    tituloInput.value = evento.titulo;
+                    descripcionInput.value = evento.descripcion;
+                    fechaInput.value = evento.fecha;
+                    horaInput.value = evento.hora;
+                }
+            } else {
+                tituloModal.textContent = 'Añadir Evento';
+            }
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalEvento() {
+            document.getElementById('mini-modal-evento').style.display = 'none';
+        }
+
+        function mostrarMiniModalAgregarProducto() {
+            document.getElementById('mini-modal-agregar-producto').style.display = 'flex';
+            document.getElementById('producto-input').value = '';
+            document.getElementById('cantidad-producto').value = 1;
+            renderizarProductosDatalist();
+        }
+
+        function ocultarMiniModalAgregarProducto() {
+            document.getElementById('mini-modal-agregar-producto').style.display = 'none';
+        }
+
+        function mostrarMiniModalEventIdeas(ideas) {
+            const modal = document.getElementById('mini-modal-event-ideas');
+            const outputDiv = document.getElementById('event-ideas-output');
+            outputDiv.innerHTML = `<p>${ideas}</p>`;
+            modal.style.display = 'flex';
+        }
+
+        function ocultarMiniModalEventIdeas() {
+            document.getElementById('mini-modal-event-ideas').style.display = 'none';
+        }
+
+
+        function generarId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function guardarDatos() {
+            showLoading('Guardando datos...');
+            setTimeout(() => {
+                try {
+                    localStorage.setItem('gestorDb', JSON.stringify(db));
+                } catch (e) {
+                    console.error("Error al guardar datos en localStorage:", e);
+                    showToast("Error al guardar datos: " + e.message, 5000);
+                } finally {
+                    hideLoading();
+                    showToast('Datos guardados correctamente');
+                    actualizarUI();
+                }
+            }, 500);
+        }
+
+        function cargarDatos() {
+            try {
+                const storedDb = localStorage.getItem('gestorDb');
+                if (storedDb) {
+                    db = JSON.parse(storedDb);
+                }
+            } catch (e) {
+                console.error("Error al cargar datos de localStorage:", e);
+                showToast("Error al cargar datos: " + e.message, 5000);
+            }
+            db.productos = db.productos || [];
+            db.clientes = db.clientes || [];
+            db.ventas = db.ventas || [];
+            db.proveedores = db.proveedores || [];
+            db.transacciones = db.transacciones || [];
+            db.eventos = db.eventos || [];
+            db.tipoCambioReal = db.tipoCambioReal || 0;
+            db.tipoCambioCalculo = db.tipoCambioCalculo || 0;
+            db.apiKey = db.apiKey || '';
+
+            document.getElementById('api-key').value = db.apiKey;
+        }
+
+        async function obtenerTipoCambioAPI() {
+            const apiKey = db.apiKey;
+            if (!apiKey) {
+                throw new Error("No hay API Key configurada. Por favor, ve a Ajustes para añadirla.");
+            }
+            const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error API: ${errorData['error-type'] || response.statusText}`);
+                }
+                const data = await response.json();
+                if (data && data.conversion_rates && data.conversion_rates.VES) {
+                    return data.conversion_rates.VES;
+                } else {
+                    throw new Error("No se encontró la tasa de cambio para VES.");
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    throw new Error("La solicitud de tipo de cambio ha excedido el tiempo límite. Intenta de nuevo más tarde.");
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        async function obtenerTipoCambio() {
+            showLoading('Actualizando tipo de cambio...');
+            try {
+                const tasa = await obtenerTipoCambioAPI();
+                db.tipoCambioReal = tasa;
+                if (db.tipoCambioCalculo === 0 || db.tipoCambioCalculo !== tasa) {
+                    db.tipoCambioCalculo = tasa;
+                }
+                guardarDatos();
+                showToast('Tipo de cambio actualizado');
+            } catch (error) {
+                console.error("Error al obtener tipo de cambio:", error);
+                if (db.tipoCambioReal === 0) {
+                    db.tipoCambioCalculo = 36;
+                    db.tipoCambioReal = 36;
+                    showToast(`Error al obtener tipo de cambio: ${error.message}. Se usará un valor por defecto de 36 VES/USD.`, 6000);
+                } else {
+                    showToast(`Error al obtener tipo de cambio: ${error.message}. Se usará el último valor conocido.`, 6000);
+                }
+            } finally {
+                hideLoading();
+                actualizarUI();
+            }
+        }
+
+        function actualizarUI() {
+            const marquee = document.getElementById('tipo-cambio-marquee');
+            if (db.tipoCambioReal > 0) {
+                marquee.textContent = `Tasa de Cambio: 1 USD = ${db.tipoCambioReal.toFixed(2)} VES | Tasa de Cálculo: 1 USD = ${db.tipoCambioCalculo.toFixed(2)} VES`;
+            } else if (db.tipoCambioCalculo > 0) {
+                marquee.textContent = `Tasa de Cálculo (manual/última): 1 USD = ${db.tipoCambioCalculo.toFixed(2)} VES`;
+            } else {
+                marquee.textContent = 'Tasa de Cambio: No disponible. Configura la API Key en Ajustes.';
+            }
+
+            renderizarInventario();
+            renderizarClientes();
+            renderizarProveedores();
+            renderizarTransacciones();
+            calcularBalance();
+            renderizarFacturas();
+            renderizarEventos();
+            renderizarClientesDatalist();
+            renderizarProductosDatalist();
+            renderizarProductosEnVenta();
+        }
+
+        function renderizarInventario() {
+            const lista = document.getElementById('inventario-lista');
+            lista.innerHTML = '';
+
+            const searchInput = document.getElementById('search-producto');
+            const filtro = searchInput.value.toLowerCase();
+
+            const productosFiltrados = db.productos.filter(p =>
+                p.nombre.toLowerCase().includes(filtro) || p.id.toLowerCase().includes(filtro)
+            );
+
+            if (productosFiltrados.length === 0 && filtro === '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No hay productos en el inventario.</td></tr>';
+                return;
+            } else if (productosFiltrados.length === 0 && filtro !== '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No se encontraron productos que coincidan con la búsqueda.</td></tr>';
+                return;
+            }
+
+            productosFiltrados.forEach(producto => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${producto.id.substring(0, 5)}...</td>
+                    <td>${producto.nombre}</td>
+                    <td>$${producto.precio.toFixed(2)}</td>
+                    <td>${producto.stock}</td>
+                    <td>
+                        <button class="btn-movil btn-primary" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0;" onclick="mostrarMiniModalProducto('${producto.id}')">Editar</button>
+                        <button class="btn-movil btn-danger" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0; margin-left: 5px;" onclick="confirmAction('¿Estás seguro de que quieres eliminar este producto?', () => eliminarProducto('${producto.id}'))">Eliminar</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function filtrarProductos() {
+            renderizarInventario();
+        }
+
+        function renderizarClientes() {
+            const lista = document.getElementById('clientes-lista');
+            lista.innerHTML = '';
+
+            const searchInput = document.getElementById('search-cliente');
+            const filtro = searchInput.value.toLowerCase();
+
+            const clientesFiltrados = db.clientes.filter(c =>
+                c.nombre.toLowerCase().includes(filtro) || c.telefono.toLowerCase().includes(filtro) || c.id.toLowerCase().includes(filtro)
+            );
+
+            if (clientesFiltrados.length === 0 && filtro === '') {
+                lista.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">No hay clientes registrados.</td></tr>';
+                return;
+            } else if (clientesFiltrados.length === 0 && filtro !== '') {
+                lista.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#777;">No se encontraron clientes que coincidan con la búsqueda.</td></tr>';
+                return;
+            }
+
+            clientesFiltrados.forEach(cliente => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${cliente.id.substring(0, 5)}...</td>
+                    <td>${cliente.nombre}</td>
+                    <td>${cliente.telefono}</td>
+                    <td>
+                        <button class="btn-movil btn-primary" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0;" onclick="mostrarMiniModalCliente('${cliente.id}')">Editar</button>
+                        <button class="btn-movil btn-danger" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0; margin-left: 5px;" onclick="confirmAction('¿Estás seguro de que quieres eliminar este cliente?', () => eliminarCliente('${cliente.id}'))">Eliminar</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function filtrarClientes() {
+            renderizarClientes();
+        }
+
+        function renderizarProveedores() {
+            const lista = document.getElementById('proveedores-lista');
+            lista.innerHTML = '';
+
+            const searchInput = document.getElementById('search-proveedor');
+            const filtro = searchInput.value.toLowerCase();
+
+            const proveedoresFiltrados = db.proveedores.filter(p =>
+                p.nombre.toLowerCase().includes(filtro) ||
+                p.contacto.toLowerCase().includes(filtro) ||
+                p.telefono.toLowerCase().includes(filtro) ||
+                p.id.toLowerCase().includes(filtro)
+            );
+
+            if (proveedoresFiltrados.length === 0 && filtro === '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No hay proveedores registrados.</td></tr>';
+                return;
+            } else if (proveedoresFiltrados.length === 0 && filtro !== '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No se encontraron proveedores que coincidan con la búsqueda.</td></tr>';
+                return;
+            }
+
+
+            proveedoresFiltrados.forEach(proveedor => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${proveedor.id.substring(0, 5)}...</td>
+                    <td>${proveedor.nombre}</td>
+                    <td>${proveedor.contacto}</td>
+                    <td>${proveedor.telefono}</td>
+                    <td>
+                        <button class="btn-movil btn-primary" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0;" onclick="mostrarMiniModalProveedor('${proveedor.id}')">Editar</button>
+                        <button class="btn-movil btn-danger" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0; margin-left: 5px;" onclick="confirmAction('¿Estás seguro de que quieres eliminar este proveedor?', () => eliminarProveedor('${proveedor.id}'))">Eliminar</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function filtrarProveedores() {
+            renderizarProveedores();
+        }
+
+        function renderizarTransacciones() {
+            const lista = document.getElementById('lista-transacciones');
+            lista.innerHTML = '';
+
+            const transaccionesOrdenadas = [...db.transacciones].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            if (transaccionesOrdenadas.length === 0) {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No hay transacciones registradas.</td></tr>';
+                return;
+            }
+
+            transaccionesOrdenadas.forEach(transaccion => {
+                const tr = document.createElement('tr');
+                const montoClase = transaccion.tipo === 'ingreso' ? 'text-success' : 'text-danger';
+                const signoMonto = transaccion.tipo === 'egreso' ? '-' : '';
+
+                tr.innerHTML = `
+                    <td>${transaccion.fecha}</td>
+                    <td>${transaccion.tipo.charAt(0).toUpperCase() + transaccion.tipo.slice(1)}</td>
+                    <td>${transaccion.descripcion}</td>
+                    <td class="${montoClase}">$${signoMonto}${transaccion.monto.toFixed(2)}</td>
+                    <td>
+                        <button class="btn-movil btn-primary" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0;" onclick="mostrarMiniModalTransaccion('${transaccion.id}')">Editar</button>
+                        <button class="btn-movil btn-danger" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0; margin-left: 5px;" onclick="confirmAction('¿Estás seguro de que quieres eliminar esta transacción?', () => eliminarTransaccion('${transaccion.id}'))">Eliminar</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function calcularBalance() {
+            let balanceUSD = 0;
+            db.transacciones.forEach(t => {
+                if (t.tipo === 'ingreso') {
+                    balanceUSD += t.monto;
+                } else {
+                    balanceUSD -= t.monto;
+                }
+            });
+            document.getElementById('balance-total-usd').textContent = balanceUSD.toFixed(2);
+            document.getElementById('balance-total-ves').textContent = (balanceUSD * db.tipoCambioCalculo).toFixed(2);
+        }
+
+        function renderizarFacturas() {
+            const lista = document.getElementById('lista-facturas');
+            lista.innerHTML = '';
+
+            const facturas = db.ventas.filter(venta => venta.clienteId && venta.clienteId !== 'generico');
+
+            const searchInput = document.getElementById('search-factura');
+            const filtro = searchInput.value.toLowerCase();
+
+            const facturasFiltradas = facturas.filter(f =>
+                f.clienteNombre.toLowerCase().includes(filtro) || f.id.toLowerCase().includes(filtro)
+            );
+
+            facturasFiltradas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            if (facturasFiltradas.length === 0 && filtro === '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No hay facturas generadas.</td></tr>';
+                return;
+            } else if (facturasFiltradas.length === 0 && filtro !== '') {
+                lista.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#777;">No se encontraron facturas que coincidan con la búsqueda.</td></tr>';
+                return;
+            }
+
+            facturasFiltradas.forEach(factura => {
+                const tr = document.createElement('tr');
+                const fechaCorta = new Date(factura.fecha).toLocaleDateString();
+                tr.innerHTML = `
+                    <td>${factura.id.substring(0, 8)}...</td>
+                    <td>${fechaCorta}</td>
+                    <td>${factura.clienteNombre}</td>
+                    <td>$${factura.totalUSD.toFixed(2)}</td>
+                    <td>
+                        <button class="btn-movil btn-info" style="width:auto; padding: 8px 12px; font-size: 0.8em; margin: 0;" onclick="showToast(verDetalleFactura('${factura.id}'), 10000)">Ver Detalle</button>
+                    </td>
+                `;
+                lista.appendChild(tr);
+            });
+        }
+
+        function filtrarFacturas() {
+            renderizarFacturas();
+        }
+
+        function verDetalleFactura(facturaId) {
+            const factura = db.ventas.find(v => v.id === facturaId);
+            if (!factura) {
+                return 'Factura no encontrada.';
+            }
+
+            let detalleText = `
+Detalle de Factura #${factura.id.substring(0, 8)}...
+Fecha: ${new Date(factura.fecha).toLocaleString()}
+Cliente: ${factura.clienteNombre}
+
+Productos:
+`;
+            factura.productos.forEach(p => {
+                detalleText += `${p.nombre} (x${p.cantidad}) - $${p.precioUnitario.toFixed(2)} c/u = $${p.subtotalUSD.toFixed(2)} USD\n`;
+            });
+            detalleText += `
+Total: $${factura.totalUSD.toFixed(2)} USD / ${factura.totalVES.toFixed(2)} VES
+`;
+            return detalleText;
+        }
+
+        function renderizarClientesDatalist() {
+            const datalist = document.getElementById('lista-clientes-venta');
+            datalist.innerHTML = '';
+            db.clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.nombre;
+                option.setAttribute('data-id', cliente.id);
+                datalist.appendChild(option);
+            });
+        }
+
+        function renderizarProductosDatalist() {
+            const datalist = document.getElementById('lista-productos-datalist');
+            datalist.innerHTML = '';
+            db.productos.forEach(producto => {
+                const option = document.createElement('option');
+                option.value = `${producto.nombre} ($${producto.precio.toFixed(2)}) - Stock: ${producto.stock}`;
+                option.setAttribute('data-id', producto.id);
+                datalist.appendChild(option);
+            });
+        }
+
+        function renderizarProductosEnVenta() {
+            const lista = document.getElementById('productos-en-venta-lista');
+            lista.innerHTML = '';
+            let totalUSD = 0;
+
+            if (productosEnVenta.length === 0) {
+                lista.innerHTML = '<li style="text-align:center; color:#777;">No hay productos en el carrito.</li>';
+            }
+
+            productosEnVenta.forEach((item, index) => {
+                const subtotal = item.precio * item.cantidad;
+                totalUSD += subtotal;
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="item-info">
+                        ${item.nombre} (x${item.cantidad}) - $${subtotal.toFixed(2)} USD
+                        (${ (subtotal * db.tipoCambioCalculo).toFixed(2) } VES)
+                    </div>
+                    <div class="item-actions">
+                        <button onclick="quitarProductoDeVenta(${index})">Quitar</button>
+                    </div>
+                `;
+                lista.appendChild(li);
+            });
+
+            document.getElementById('total-usd').textContent = totalUSD.toFixed(2);
+            document.getElementById('total-ves').textContent = (totalUSD * db.tipoCambioCalculo).toFixed(2);
+        }
+
+        function renderizarEventos() {
+            const lista = document.getElementById('lista-eventos');
+            lista.innerHTML = '';
+
+            if (db.eventos.length === 0) {
+                lista.innerHTML = '<p style="text-align: center; color: #777;">No hay eventos programados.</p>';
+                return;
+            }
+
+            const eventosOrdenados = [...db.eventos].sort((a, b) => {
+                const dateTimeA = new Date(`${a.fecha}T${a.hora}`);
+                const dateTimeB = new Date(`${b.fecha}T${b.hora}`);
+                return dateTimeA - dateTimeB;
+            });
+
+            const now = new Date();
+
+            const searchInput = document.getElementById('search-evento');
+            const filtro = searchInput.value.toLowerCase();
+
+            eventosOrdenados.filter(e =>
+                e.titulo.toLowerCase().includes(filtro) ||
+                (e.descripcion && e.descripcion.toLowerCase().includes(filtro)) ||
+                e.fecha.includes(filtro)
+            ).forEach(evento => {
+                const eventDateTime = new Date(`${evento.fecha}T${evento.hora}`);
+                let classList = 'event-item';
+                if (eventDateTime > now) {
+                    classList += ' upcoming';
+                } else {
+                    classList += ' past';
+                }
+
+                const li = document.createElement('div');
+                li.className = classList;
+                li.setAttribute('data-event-id', evento.id);
+
+                li.innerHTML = `
+                    <h4>${evento.titulo}</h4>
+                    <p>${evento.descripcion}</p>
+                    <p><strong>Fecha:</strong> ${evento.fecha} <strong>Hora:</strong> ${evento.hora}</p>
+                    <div class="event-actions">
+                        <button class="btn-movil btn-primary" style="width:auto; padding: 5px 10px; font-size: 0.8em; margin:0;" onclick="mostrarMiniModalEvento('${evento.id}')">Editar</button>
+                        <button class="btn-movil btn-danger" style="width:auto; padding: 5px 10px; font-size: 0.8em; margin:0; margin-left: 5px;" onclick="confirmAction('¿Estás seguro de que quieres eliminar este evento?', () => eliminarEvento('${evento.id}'))">Eliminar</button>
+                    </td>
+                `;
+                lista.appendChild(li);
+            });
+        }
+
+        function filtrarEventos() {
+            renderizarEventos();
+        }
+
+        function guardarProducto() {
+            const id = document.getElementById('producto-id-editar').value;
+            const nombre = document.getElementById('producto-nombre').value.trim();
+            const precio = parseFloat(document.getElementById('producto-precio').value);
+            const stock = parseInt(document.getElementById('producto-stock').value);
+            const descripcionIA = document.getElementById('producto-descripcion-ia').value.trim();
+
+            if (!nombre || isNaN(precio) || precio <= 0 || isNaN(stock) || stock < 0) {
+                showToast('Por favor, completa todos los campos de producto correctamente.');
+                return;
+            }
+
+            if (id) {
+                const index = db.productos.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    db.productos[index] = { id, nombre, precio, stock, descripcionIA };
+                    showToast('Producto actualizado exitosamente.');
+                }
+            } else {
+                db.productos.push({ id: generarId(), nombre, precio, stock, descripcionIA });
+                showToast('Producto añadido exitosamente.');
+            }
+            guardarDatos();
+            ocultarMiniModalProducto();
+        }
+
+        function eliminarProducto(id) {
+            db.productos = db.productos.filter(p => p.id !== id);
+            guardarDatos();
+            showToast('Producto eliminado.');
+        }
+
+        function guardarCliente() {
+            const id = document.getElementById('cliente-id-editar').value;
+            const nombre = document.getElementById('cliente-nombre').value.trim();
+            const telefono = document.getElementById('cliente-telefono').value.trim();
+
+            if (!nombre) {
+                showToast('Por favor, ingresa el nombre del cliente.');
+                return;
+            }
+
+            if (id) {
+                const index = db.clientes.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    db.clientes[index] = { id, nombre, telefono };
+                    showToast('Cliente actualizado exitosamente.');
+                }
+            } else {
+                db.clientes.push({ id: generarId(), nombre, telefono });
+                showToast('Cliente añadido exitosamente.');
+            }
+            guardarDatos();
+            ocultarMiniModalCliente();
+        }
+
+        function eliminarCliente(id) {
+            db.clientes = db.clientes.filter(c => c.id !== id);
+            guardarDatos();
+            showToast('Cliente eliminado.');
+        }
+
+        function guardarProveedor() {
+            const id = document.getElementById('proveedor-id-editar').value;
+            const nombre = document.getElementById('proveedor-nombre').value.trim();
+            const contacto = document.getElementById('proveedor-contacto').value.trim();
+            const telefono = document.getElementById('proveedor-telefono').value.trim();
+
+            if (!nombre) {
+                showToast('Por favor, ingresa el nombre del proveedor.');
+                return;
+            }
+
+            if (id) {
+                const index = db.proveedores.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    db.proveedores[index] = { id, nombre, contacto, telefono };
+                    showToast('Proveedor actualizado exitosamente.');
+                }
+            } else {
+                db.proveedores.push({ id: generarId(), nombre, contacto, telefono });
+                showToast('Proveedor añadido exitosamente.');
+            }
+            guardarDatos();
+            ocultarMiniModalProveedor();
+        }
+
+        function eliminarProveedor(id) {
+            db.proveedores = db.proveedores.filter(p => p.id !== id);
+            guardarDatos();
+            showToast('Proveedor eliminado.');
+        }
+
+        function guardarTransaccion() {
+            const id = document.getElementById('transaccion-id-editar').value;
+            const tipo = document.getElementById('transaccion-tipo').value;
+            const monto = parseFloat(document.getElementById('transaccion-monto').value);
+            const descripcion = document.getElementById('transaccion-descripcion').value.trim();
+            const fecha = document.getElementById('transaccion-fecha').value;
+
+            if (!tipo || isNaN(monto) || monto <= 0 || !descripcion || !fecha) {
+                showToast('Por favor, completa todos los campos de la transacción correctamente.');
+                return;
+            }
+
+            if (id) {
+                const index = db.transacciones.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    db.transacciones[index] = { id, tipo, monto, descripcion, fecha };
+                    showToast('Transacción actualizada exitosamente.');
+                }
+            } else {
+                db.transacciones.push({ id: generarId(), tipo, monto, descripcion, fecha });
+                showToast('Transacción añadida exitosamente.');
+            }
+            guardarDatos();
+            ocultarMiniModalTransaccion();
+        }
+
+        function eliminarTransaccion(id) {
+            db.transacciones = db.transacciones.filter(t => t.id !== id);
+            guardarDatos();
+            showToast('Transacción eliminada.');
+        }
+
+        function guardarEvento() {
+            const id = document.getElementById('evento-id-editar').value;
+            const titulo = document.getElementById('evento-titulo').value.trim();
+            const descripcion = document.getElementById('evento-descripcion').value.trim();
+            const fecha = document.getElementById('evento-fecha').value;
+            const hora = document.getElementById('evento-hora').value;
+
+            if (!titulo || !fecha || !hora) {
+                showToast('El título, la fecha y la hora del evento son obligatorios.');
+                return;
+            }
+
+            const eventDateTime = new Date(`${fecha}T${hora}`);
+            if (isNaN(eventDateTime)) {
+                showToast('Formato de fecha u hora inválido.');
+                return;
+            }
+
+            if (id) {
+                const index = db.eventos.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    db.eventos[index] = { id, titulo, descripcion, fecha, hora, sounded: db.eventos[index].sounded };
+                    showToast('Evento actualizado.');
+                }
+            } else {
+                db.eventos.push({ id: generarId(), titulo, descripcion, fecha, hora, sounded: false });
+                showToast('Evento añadido.');
+            }
+            guardarDatos();
+            ocultarMiniModalEvento();
+            iniciarVerificacionAlarmas();
+        }
+
+        function eliminarEvento(id) {
+            db.eventos = db.eventos.filter(e => e.id !== id);
+            guardarDatos();
+            showToast('Evento eliminado.');
+            iniciarVerificacionAlarmas();
+        }
+
+        function checkAlarms() {
+            const now = new Date();
+            db.eventos.forEach(evento => {
+                const eventDateTime = new Date(`${evento.fecha}T${evento.hora}`);
+                if (!evento.sounded && eventDateTime <= now) {
+                    const alarmSound = document.getElementById('alarm-sound');
+                    alarmSound.play().catch(e => console.warn("No se pudo reproducir el sonido de la alarma:", e.message));
+
+                    showToast(`¡Alarma! Evento: "${evento.titulo}"`, 10000);
+
+                    const eventElement = document.querySelector(`.event-item[data-event-id="${evento.id}"]`);
+                    if (eventElement) {
+                        eventElement.classList.add('ringing');
+                        eventElement.classList.remove('upcoming');
+                        setTimeout(() => {
+                            eventElement.classList.remove('ringing');
+                            eventElement.classList.add('past');
+                        }, 5000);
+                    }
+
+                    evento.sounded = true;
+                    guardarDatos();
+                }
+            });
+            if (currentSection === 'seccion-ajustes') {
+                renderizarEventos();
+            }
+        }
+
+        function iniciarVerificacionAlarmas() {
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+            }
+            alarmInterval = setInterval(checkAlarms, 60 * 1000);
+            checkAlarms();
+        }
+
+        function agregarProductoAVenta() {
+            const productoInput = document.getElementById('producto-input');
+            const cantidadInput = document.getElementById('cantidad-producto');
+
+            const inputValue = productoInput.value;
+            let selectedOption = document.querySelector(`#lista-productos-datalist option[value="${inputValue}"]`);
+            if (!selectedOption) {
+                const productName = inputValue.split('(')[0].trim();
+                selectedOption = Array.from(document.querySelectorAll('#lista-productos-datalist option'))
+                                     .find(opt => opt.value.startsWith(productName));
+            }
+
+            const productoId = selectedOption ? selectedOption.dataset.id : null;
+
+            const cantidad = parseInt(cantidadInput.value);
+
+            if (!productoId || isNaN(cantidad) || cantidad <= 0) {
+                showToast('Por favor, selecciona un producto válido y una cantidad mayor a cero.');
+                return;
+            }
+
+            const productoEnInventario = db.productos.find(p => p.id === productoId);
+
+            if (!productoEnInventario) {
+                showToast('Producto no encontrado en el inventario. Por favor, selecciona uno de la lista.');
+                return;
+            }
+
+            const itemEnCarritoExistente = productosEnVenta.find(item => item.id === productoId);
+            const cantidadYaEnCarrito = itemEnCarritoExistente ? itemEnCarritoExistente.cantidad : 0;
+
+            if (productoEnInventario.stock < (cantidad + cantidadYaEnCarrito)) {
+                showToast(`No hay suficiente stock de ${productoEnInventario.nombre}. Disponible: ${productoEnInventario.stock}. Ya en carrito: ${cantidadYaEnCarrito}`);
+                return;
+            }
+
+            if (itemEnCarritoExistente) {
+                itemEnCarritoExistente.cantidad += cantidad;
+            } else {
+                productosEnVenta.push({
+                    id: productoEnInventario.id,
+                    nombre: productoEnInventario.nombre,
+                    precio: productoEnInventario.precio,
+                    cantidad: cantidad
+                });
+            }
+
+            showToast(`${cantidad} unidades de ${productoEnInventario.nombre} añadidas al carrito.`);
+            renderizarProductosEnVenta();
+            ocultarMiniModalAgregarProducto();
+        }
+
+        function quitarProductoDeVenta(index) {
+            const nombreProducto = productosEnVenta[index].nombre;
+            productosEnVenta.splice(index, 1);
+            showToast(`"${nombreProducto}" quitado del carrito.`);
+            renderizarProductosEnVenta();
+        }
+
+        function procesarVenta() {
+            if (productosEnVenta.length === 0) {
+                showToast('No hay productos en el carrito para procesar la venta.');
+                return;
+            }
+
+            const clienteInput = document.getElementById('cliente-venta');
+            const nombreClienteSeleccionado = clienteInput.value.trim();
+            const selectedOption = document.querySelector(`#lista-clientes-venta option[value="${clienteInput.value}"]`);
+            let clienteId = selectedOption ? selectedOption.dataset.id : null;
+            let nombreCliente = nombreClienteSeleccionado;
+
+            if (!clienteId && nombreClienteSeleccionado) {
+                clienteId = generarId();
+                db.clientes.push({ id: clienteId, nombre: nombreClienteSeleccionado, telefono: 'N/A' });
+                showToast(`Nuevo cliente "${nombreClienteSeleccionado}" registrado.`);
+            } else if (!nombreClienteSeleccionado) {
+                nombreCliente = "Cliente Genérico";
+                clienteId = "generico";
+            }
+
+            for (const item of productosEnVenta) {
+                const productoEnInventario = db.productos.find(p => p.id === item.id);
+                if (!productoEnInventario || productoEnInventario.stock < item.cantidad) {
+                    showToast(`ERROR: Stock insuficiente para ${item.nombre}. Disponible: ${productoEnInventario ? productoEnInventario.stock : 0}`);
+                    return;
+                }
+            }
+
+            let totalUSD = 0;
+            const productosVendidosDetalle = [];
+
+            productosEnVenta.forEach(item => {
+                const productoEnInventario = db.productos.find(p => p.id === item.id);
+                if (productoEnInventario) {
+                    productoEnInventario.stock -= item.cantidad;
+                    totalUSD += item.precio * item.cantidad;
+                    productosVendidosDetalle.push({
+                        id: item.id,
+                        nombre: item.nombre,
+                        precioUnitario: item.precio,
+                        cantidad: item.cantidad,
+                        subtotalUSD: parseFloat((item.precio * item.cantidad).toFixed(2))
+                    });
+                }
+            });
+
+            const venta = {
+                id: generarId(),
+                fecha: new Date().toISOString(),
+                clienteId: clienteId,
+                clienteNombre: nombreCliente,
+                productos: productosVendidosDetalle,
+                totalUSD: parseFloat(totalUSD.toFixed(2)),
+                totalVES: parseFloat((totalUSD * db.tipoCambioCalculo).toFixed(2)),
+                tipoCambioUsado: db.tipoCambioCalculo
+            };
+
+            db.ventas.push(venta);
+            guardarDatos();
+
+            productosEnVenta = [];
+            document.getElementById('cliente-venta').value = '';
+            renderizarProductosEnVenta();
+
+            showToast(`Venta procesada exitosamente. Total: $${venta.totalUSD.toFixed(2)} USD / ${venta.totalVES.toFixed(2)} VES`);
+        }
+
+        function generarReporte() {
+            const tipoReporte = document.getElementById('reporte-tipo').value;
+            const reporteContenido = document.getElementById('reporte-contenido');
+            const summarizeButton = document.getElementById('summarize-report-btn');
+            const resumenIaDiv = document.getElementById('reporte-resumen-ia');
+            const resumenIaTexto = document.getElementById('reporte-resumen-texto');
+
+            reporteContenido.innerHTML = '';
+            summarizeButton.style.display = 'none';
+            resumenIaDiv.style.display = 'none';
+            resumenIaTexto.textContent = '';
+
+
+            if (db.ventas.length === 0) {
+                reporteContenido.innerHTML = '<p style="text-align:center; color:#777;">No hay datos de ventas para generar reportes.</p>';
+                return;
+            }
+
+            let html = '<h4>Resultados del Reporte</h4>';
+            let reportDataForAI = [];
+
+            if (tipoReporte === 'ventas-dia') {
+                const hoy = new Date().toISOString().slice(0, 10);
+                const ventasDelDia = db.ventas.filter(venta => venta.fecha.startsWith(hoy));
+
+                if (ventasDelDia.length === 0) {
+                    html += '<p>No hay ventas registradas para hoy.</p>';
+                } else {
+                    let totalDiaUSD = 0;
+                    html += '<table class="tabla-movil"><thead><tr><th>ID Venta</th><th>Cliente</th><th>Total USD</th><th>Total VES</th></tr></thead><tbody>';
+                    ventasDelDia.forEach(venta => {
+                        html += `<tr>
+                                    <td>${venta.id.substring(0, 8)}...</td>
+                                    <td>${venta.clienteNombre}</td>
+                                    <td>$${venta.totalUSD.toFixed(2)}</td>
+                                    <td>${venta.totalVES.toFixed(2)}</td>
+                                </tr>`;
+                        totalDiaUSD += venta.totalUSD;
+                        reportDataForAI.push({
+                            type: 'venta',
+                            id: venta.id.substring(0,8),
+                            cliente: venta.clienteNombre,
+                            totalUSD: venta.totalUSD,
+                            totalVES: venta.totalVES
+                        });
+                    });
+                    html += `</tbody></table>
+                            <p style="margin-top: 15px; font-weight: bold;">Total de Ventas del Día: $${totalDiaUSD.toFixed(2)} USD / ${(totalDiaUSD * db.tipoCambioCalculo).toFixed(2)} VES</p>`;
+                    reportDataForAI.unshift({ type: 'resumen_dia', totalDiaUSD, totalDiaVES: (totalDiaUSD * db.tipoCambioCalculo) });
+                }
+            } else if (tipoReporte === 'productos-vendidos') {
+                const productosVendidosConteo = {};
+                db.ventas.forEach(venta => {
+                    venta.productos.forEach(item => {
+                        if (productosVendidosConteo[item.nombre]) {
+                            productosVendidosConteo[item.nombre].cantidad += item.cantidad;
+                            productosVendidosConteo[item.nombre].totalUSD += parseFloat(item.subtotalUSD);
+                        } else {
+                            productosVendidosConteo[item.nombre] = {
+                                cantidad: item.cantidad,
+                                totalUSD: parseFloat(item.subtotalUSD)
+                            };
+                        }
+                    });
+                });
+
+                const productosOrdenados = Object.entries(productosVendidosConteo)
+                                                    .sort(([, a], [, b]) => b.cantidad - a.cantidad);
+
+                if (productosOrdenados.length === 0) {
+                    html += '<p>No hay productos vendidos registrados.</p>';
+                } else {
+                    html += '<table class="tabla-movil"><thead><tr><th>Producto</th><th>Cantidad Vendida</th><th>Total Generado (USD)</th></tr></thead><tbody>';
+                    productosOrdenados.forEach(([nombre, data]) => {
+                        html += `<tr>
+                                    <td>${nombre}</td>
+                                    <td>${data.cantidad}</td>
+                                    <td>$${data.totalUSD.toFixed(2)}</td>
+                                </tr>`;
+                        reportDataForAI.push({
+                            type: 'producto_vendido',
+                            nombre,
+                            cantidad: data.cantidad,
+                            totalUSD: data.totalUSD
+                        });
+                    });
+                    html += '</tbody></table>';
+                }
+            } else if (tipoReporte === 'ventas-cliente') {
+                const ventasPorCliente = {};
+                db.ventas.forEach(venta => {
+                    const clienteKey = venta.clienteId + '_' + venta.clienteNombre;
+                    if (ventasPorCliente[clienteKey]) {
+                        ventasPorCliente[clienteKey].totalUSD += venta.totalUSD;
+                        ventasPorCliente[clienteKey].cantidadVentas++;
+                    } else {
+                        ventasPorCliente[clienteKey] = {
+                            nombre: venta.clienteNombre,
+                            totalUSD: venta.totalUSD,
+                            cantidadVentas: 1
+                        };
+                    }
+                });
+
+                const clientesOrdenados = Object.values(ventasPorCliente)
+                                                .sort((a, b) => b.totalUSD - a.totalUSD);
+
+                if (clientesOrdenados.length === 0) {
+                    html += '<p>No hay ventas registradas por cliente.</p>';
+                } else {
+                    html += '<table class="tabla-movil"><thead><tr><th>Cliente</th><th>Total Ventas (USD)</th><th># Ventas</th></tr></thead><tbody>';
+                    clientesOrdenados.forEach(cliente => {
+                        html += `<tr>
+                                    <td>${cliente.nombre}</td>
+                                    <td>$${cliente.totalUSD.toFixed(2)}</td>
+                                    <td>${cliente.cantidadVentas}</td>
+                                </tr>`;
+                        reportDataForAI.push({
+                            type: 'venta_cliente',
+                            nombre: cliente.nombre,
+                            totalUSD: cliente.totalUSD,
+                            cantidadVentas: cliente.cantidadVentas
+                        });
+                    });
+                    html += '</tbody></table>';
+                }
+            }
+            reporteContenido.innerHTML = html;
+            if (reportDataForAI.length > 0) {
+                summarizeButton.style.display = 'block';
+                summarizeButton.onclick = () => summarizeReport(reportDataForAI, tipoReporte);
+            }
+        }
+
+        function guardarAPIKey() {
+            const apiKeyInput = document.getElementById('api-key');
+            const newKey = apiKeyInput.value.trim();
+            if (newKey) {
+                db.apiKey = newKey;
+                guardarDatos();
+                showToast('API Key guardada exitosamente.');
+            } else {
+                showToast('La API Key no puede estar vacía.');
+            }
+        }
+
+        function confirmAction(message, callback) {
+            const modal = document.getElementById('confirm-exit-modal');
+            const modalTitle = modal.querySelector('h3');
+            const modalText = modal.querySelector('p');
+            const btnYes = modal.querySelector('.btn-yes');
+            const btnNo = modal.querySelector('.btn-no');
+
+            modalTitle.textContent = message;
+            modalText.textContent = '';
+
+            const newBtnYes = btnYes.cloneNode(true);
+            const newBtnNo = btnNo.cloneNode(true);
+            btnYes.parentNode.replaceChild(newBtnYes, btnYes);
+            btnNo.parentNode.replaceChild(newBtnNo, btnNo);
+
+            newBtnYes.onclick = () => {
+                modal.style.display = 'none';
+                callback();
+            };
+            newBtnNo.onclick = () => {
+                modal.style.display = 'none';
+                showToast('Acción cancelada.');
+            };
+
+            modal.style.display = 'flex';
+        }
+
+
+        function resetearDatos() {
+            confirmAction('¿Estás seguro de que quieres resetear TODOS los datos de la aplicación? Esta acción es irreversible.', () => {
+                db = {
+                    productos: [],
+                    clientes: [],
+                    ventas: [],
+                    proveedores: [],
+                    transacciones: [],
+                    eventos: [],
+                    tipoCambioReal: 0,
+                    tipoCambioCalculo: 0,
+                    apiKey: ''
+                };
+                productosEnVenta = [];
+                localStorage.removeItem('gestorDb');
+                document.getElementById('api-key').value = '';
+
+                localStorage.removeItem(TRIAL_START_KEY);
+                localStorage.removeItem(APP_LOCKED_KEY);
+                checkTrialStatus();
+
+                cargarDatosYTipoCambioInicial();
+                showToast('Todos los datos han sido reseteados correctamente.');
+                volverAlMenuPrincipal();
+                iniciarVerificacionAlarmas();
+            });
+        }
+
+        function handleBackButton() {
+            const confirmModal = document.getElementById('confirm-exit-modal');
+            if (confirmModal.style.display === 'flex') {
+                confirmModal.style.display = 'none';
+                return;
+            }
+
+            const eventIdeasModal = document.getElementById('mini-modal-event-ideas');
+            if (eventIdeasModal.style.display === 'flex') {
+                eventIdeasModal.style.display = 'none';
+                return;
+            }
+
+            if (productosEnVenta.length > 0 && currentSection === 'seccion-ventas') {
+                confirmAction('Tienes una venta en proceso. ¿Estás seguro de querer volver? Los productos en venta se perderán.', () => {
+                    productosEnVenta = [];
+                    renderizarProductosEnVenta();
+                    volverAlMenuPrincipal();
+                });
+                return;
+            }
+
+            if (currentSection === 'main-menu') {
+                if (!backButtonPressedOnce) {
+                    backButtonPressedOnce = true;
+                    showToast('Presiona de nuevo para salir');
+                    setTimeout(() => { backButtonPressedOnce = false; }, 2000);
+                } else {
+                    showExitConfirmation();
+                }
+            } else {
+                volverAlMenuPrincipal();
+            }
+        }
+
+        window.addEventListener('beforeunload', (e) => {
+            if (productosEnVenta.length > 0) {
+                e.preventDefault();
+                e.returnValue = 'Tienes una venta en proceso. ¿Estás seguro de querer salir?';
+                return e.returnValue;
+            }
+        });
+
+        window.addEventListener('popstate', (e) => {
+            e.preventDefault();
+            handleBackButton();
+            history.pushState({ isApp: true }, '');
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                        showToast('Aplicación lista para instalar y usar offline.', 5000);
+                    })
+                    .catch(error => {
+                        console.error('Fallo el registro del Service Worker:', error);
+                        showToast('Error al preparar la aplicación para instalación. Revisa la consola.', 5000);
+                    });
+            });
+        }
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+        window.addEventListener('appinstalled', () => {
+            showToast('¡El Gestor Empresarial se ha instalado con éxito!', 5000);
+            deferredPrompt = null;
+        });
+
+        async function callGeminiAPI(prompt, message = 'Generando respuesta con IA...') {
+            showLoading(message);
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(`Error de API: ${response.status} - ${errorDetails.error.message || 'Error desconocido'}`);
+                }
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("No se pudo obtener una respuesta válida de la IA.");
+                }
+            } catch (error) {
+                console.error("Error al llamar a la API de Gemini:", error);
+                showToast(`Error de IA: ${error.message}`, 6000);
+                return null;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function generarDescripcionProducto() {
+            const productName = document.getElementById('producto-nombre').value.trim();
+            const productDescriptionElement = document.getElementById('producto-descripcion-ia');
+
+            if (!productName) {
+                showToast('Por favor, ingresa el nombre del producto para generar una descripción.');
+                return;
+            }
+
+            const prompt = `Genera una descripción de marketing atractiva y concisa (máximo 50 palabras) para el siguiente producto: "${productName}". Destaca sus principales beneficios o características.`;
+            const generatedDescription = await callGeminiAPI(prompt, 'Generando descripción de producto...');
+
+            if (generatedDescription) {
+                productDescriptionElement.value = generatedDescription;
+                showToast('Descripción generada por IA.');
+            } else {
+                productDescriptionElement.value = 'No se pudo generar la descripción. Intenta de nuevo más tarde.';
+            }
+        }
+
+        async function generarIdeasEvento() {
+            const eventTitle = document.getElementById('evento-titulo').value.trim();
+            const eventDescription = document.getElementById('evento-descripcion').value.trim();
+
+            if (!eventTitle) {
+                showToast('Por favor, ingresa un título para el evento para generar ideas.');
+                return;
+            }
+
+            let prompt = `Genera 3 ideas creativas y originales para un evento titulado "${eventTitle}".`;
+            if (eventDescription) {
+                prompt += ` La descripción actual del evento es: "${eventDescription}". Incorpora elementos de esta descripción en las ideas.`;
+            }
+            prompt += ` Lista las ideas en formato de lista numerada con una breve descripción de cada una.`;
+
+            const generatedIdeas = await callGeminiAPI(prompt, 'Generando ideas de evento...');
+
+            if (generatedIdeas) {
+                mostrarMiniModalEventIdeas(generatedIdeas);
+            } else {
+                mostrarMiniModalEventIdeas('No se pudieron generar ideas de evento. Intenta de nuevo más tarde.');
+            }
+        }
+
+        async function summarizeReport(reportData, reportType) {
+            const resumenIaDiv = document.getElementById('reporte-resumen-ia');
+            const resumenIaTexto = document.getElementById('reporte-resumen-texto');
+
+            if (!reportData || reportData.length === 0) {
+                resumenIaDiv.style.display = 'none';
+                showToast('No hay datos en el reporte para generar un resumen.');
+                return;
+            }
+
+            let prompt = `Genera un resumen narrativo y conciso del siguiente reporte de ${reportType}. Destaca las cifras clave, las tendencias importantes y cualquier anomalía o éxito notable. Aquí están los datos del reporte (en formato JSON): \n\n${JSON.stringify(reportData, null, 2)}`;
+
+            const generatedSummary = await callGeminiAPI(prompt, 'Generando resumen del reporte...');
+
+            if (generatedSummary) {
+                resumenIaTexto.textContent = generatedSummary;
+                resumenIaDiv.style.display = 'block';
+                showToast('Resumen de reporte generado por IA.');
+            } else {
+                resumenIaTexto.textContent = 'No se pudo generar el resumen del reporte. Intenta de nuevo más tarde.';
+                resumenIaDiv.style.display = 'block';
+            }
+        }
+
+        async function cargarDatosYTipoCambioInicial() {
+            cargarDatos();
+            await obtenerTipoCambio();
+            actualizarUI();
+
+            productosEnVenta = [];
+            renderizarProductosEnVenta();
+
+            iniciarVerificacionAlarmas();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkTrialStatus();
+
+            if (history.state === null || !history.state.isApp) {
+                history.pushState({ isApp: true }, '');
+            }
+
+            setTimeout(() => {
+                showToast('Bienvenido al Gestor Empresarial');
+            }, 1000);
+
+            cargarDatosYTipoCambioInicial();
+
+            mostrarSeccion('main-menu');
+        });
+    </script>
+</body>
+</html>
+
