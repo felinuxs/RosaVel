@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sin conexión · Comedor Petroceno</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
+    background:#0d3b66;color:#fff;text-align:center;padding:28px;
+  }
+  .box{max-width:380px}
+  .ico{
+    width:76px;height:76px;margin:0 auto 20px;border-radius:22px;
+    background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;
+    font-size:36px;
+  }
+  h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.6rem}
+  p{font-size:.9rem;line-height:1.65;opacity:.85;margin-bottom:1.6rem}
+  button{
+    display:inline-block;padding:.8rem 2rem;border:none;border-radius:13px;
+    background:#fff;color:#0d3b66;font-weight:700;font-size:.9rem;
+    font-family:inherit;cursor:pointer;
+  }
+  button:active{transform:scale(.97)}
+  .nota{font-size:.72rem;opacity:.6;margin-top:1.6rem;line-height:1.6}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="ico">&#128246;</div>
+    <h1>Sin conexión a internet</h1>
+    <p>
+      Esta aplicación funciona <b>sin internet</b>.<br>
+      Ciérrala y vuelve a abrirla desde el icono de tu pantalla de inicio.
+    </p>
+    <button onclick="location.reload()">Reintentar</button>
+    <div class="nota">
+      Tus datos están guardados en este dispositivo y no se han perdido.
+    </div>
+  </div>
+</body>
+</html>

@@ -3,20 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0d3b66">
+<meta name="theme-color" id="metaThemeColor" content="#0d3b66">
 <meta name="description" content="Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petroceno.">
 <title>Comedor Petroceno · Control de Comidas</title>
 
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Comedor">
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<!-- Motor XLSX propio: 0 KB de CDN, funciona SIN INTERNET, respeta el formato original -->
+<script src="app-xlsx.js"></script>
+<!-- jsPDF se carga bajo demanda solo al exportar PDF (ver cargarJsPDF) -->
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -136,7 +137,51 @@ body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-dir
 .snap-item .snap-date{font-size:13px;font-weight:700;color:var(--primary);flex:1}
 .snap-item .snap-total{font-size:12px;font-weight:700;color:var(--text-muted)}
 .snap-item button{background:var(--primary-soft);color:var(--primary);border:none;padding:6px 12px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer}
+
+/* ============================================================
+   TEMA OSCURO  ·  se activa con [data-theme="dark"] en <html>
+   ============================================================ */
+html[data-theme="dark"]{
+  --primary:#3d7fd0;--primary-light:#5b9ae0;--primary-soft:#16283f;--accent:#f4a261;
+  --bg:#0b1220;--card:#111b2e;--text:#e6edf7;--text-muted:#93a4bd;--border:#22304a;
+  --danger:#ff6b6b;--success:#4ade80;--warning:#fbbf24;
+  --shadow:0 4px 14px rgba(0,0,0,.45);
+}
+html[data-theme="dark"] body{background:var(--bg);color:var(--text)}
+html[data-theme="dark"] .app-header{background:linear-gradient(135deg,#0f2038,#173d68);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+html[data-theme="dark"] .date-bar,
+html[data-theme="dark"] .back-btn,
+html[data-theme="dark"] .personal-box,
+html[data-theme="dark"] .pwa-prompt,
+html[data-theme="dark"] .snap-item,
+html[data-theme="dark"] .modal{background:var(--card);color:var(--text)}
+html[data-theme="dark"] .date-bar input[type="date"],
+html[data-theme="dark"] .modal input,
+html[data-theme="dark"] .modal select,
+html[data-theme="dark"] .stepper input,
+html[data-theme="dark"] .stepper input:focus,
+html[data-theme="dark"] .date-bar input[type="date"]:focus,
+html[data-theme="dark"] .modal input:focus,
+html[data-theme="dark"] .modal select:focus{background:#0d1728;color:var(--text);border-color:var(--border)}
+html[data-theme="dark"] .btn-warning{background:#3a2c10;color:var(--warning)}
+html[data-theme="dark"] .toast{background:#1b2a44;color:#fff}
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .area-card{background:var(--card)}
+html[data-theme="dark"] .total-banner{background:linear-gradient(135deg,#0f2038,#1d4a7d);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+html[data-theme="dark"] .modal-bg{background:rgba(2,6,16,.75)}
+html[data-theme="dark"] ::-webkit-scrollbar{width:8px;height:8px}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radius:9px}
 </style>
+<script>
+// Aplicar tema ANTES de pintar (evita el parpadeo blanco)
+(function(){
+  try{
+    var t = localStorage.getItem('comedor_tema');
+    if(!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 
@@ -149,6 +194,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-dir
     </div>
   </div>
   <div class="header-actions">
+    <button class="icon-btn" id="btnTema" title="Cambiar tema">🌙</button>
     <button class="icon-btn" id="btnSnapshots" title="Histórico">📚</button>
     <button class="icon-btn" id="btnExportExcel" title="Excel">📊</button>
     <button class="icon-btn" id="btnExportPDF" title="PDF">📄</button>
@@ -301,16 +347,8 @@ body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-dir
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// SERVICE WORKER
-// ============================================================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(reg => console.log('SW registrado:', reg.scope))
-      .catch(err => console.warn('SW error:', err));
-  });
-}
+// (El registro del Service Worker esta al final del script, con aviso de
+//  actualizacion y proteccion para file://)
 
 // ============================================================
 // PERSISTENCIA IndexedDB
@@ -322,8 +360,23 @@ const STORE_SNAPSHOTS = 'snapshots';
 let db = null;
 
 function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
+  return new Promise((resolve) => {
+    // Si IndexedDB no existe o esta bloqueado (file:// en Chrome = origen opaco),
+    // se resuelve con null y la app usa el respaldo de localStorage.
+    if (typeof indexedDB === 'undefined') { resolve(null); return; }
+    let settled = false;
+    const finish = (v) => { if (!settled) { settled = true; db = v; resolve(v); } };
+
+    // SALVAGUARDAS: en file:// IndexedDB nunca dispara onsuccess ni onerror
+    const timer = setTimeout(() => {
+      console.warn('IndexedDB no respondio; se usara localStorage');
+      finish(null);
+    }, 2000);
+
+    let req;
+    try { req = indexedDB.open(DB_NAME, DB_VERSION); }
+    catch (e) { clearTimeout(timer); finish(null); return; }
+
     req.onupgradeneeded = (e) => {
       const database = e.target.result;
       if (!database.objectStoreNames.contains(STORE_STATE)) database.createObjectStore(STORE_STATE);
@@ -332,12 +385,15 @@ function openDB() {
         s.createIndex('fecha', 'fecha', { unique: false });
       }
     };
-    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
-    req.onerror = (e) => reject(e);
+    req.onsuccess = (e) => { clearTimeout(timer); finish(e.target.result); };
+    req.onerror = () => { clearTimeout(timer); finish(null); };
+    req.onblocked = () => { clearTimeout(timer); finish(null); };
   });
 }
+function _sinDB() { return new Error('IndexedDB no disponible'); }
 function dbGet(store, key) {
   return new Promise((res, rej) => {
+    if (!db) { rej(_sinDB()); return; }
     const tx = db.transaction(store, 'readonly');
     const r = tx.objectStore(store).get(key);
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
@@ -345,6 +401,7 @@ function dbGet(store, key) {
 }
 function dbPut(store, value, key) {
   return new Promise((res, rej) => {
+    if (!db) { rej(_sinDB()); return; }
     const tx = db.transaction(store, 'readwrite');
     const os = tx.objectStore(store);
     const r = key !== undefined ? os.put(value, key) : os.put(value);
@@ -353,6 +410,7 @@ function dbPut(store, value, key) {
 }
 function dbGetAll(store) {
   return new Promise((res, rej) => {
+    if (!db) { rej(_sinDB()); return; }
     const tx = db.transaction(store, 'readonly');
     const r = tx.objectStore(store).getAll();
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
@@ -466,11 +524,25 @@ async function crearSnapshot(fecha, motivo='manual') {
       personal: a.personal[fecha] || []
     }))))
   };
-  try { await dbPut(STORE_SNAPSHOTS, snap); return snap; } catch(e) { return null; }
+  try { await dbPut(STORE_SNAPSHOTS, snap); return snap; }
+  catch(e) { guardarSnapshotsLS(snap); return snap; }
+}
+const SNAPS_LS_KEY = 'comedor_snapshots_v2';
+function leerSnapshotsLS() {
+  try { const a = JSON.parse(localStorage.getItem(SNAPS_LS_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+  catch(e) { return []; }
+}
+function guardarSnapshotsLS(snap) {
+  try {
+    const all = leerSnapshotsLS().filter(s => s.id !== snap.id);
+    all.push(snap);
+    all.sort((a, b) => b.ts - a.ts);
+    localStorage.setItem(SNAPS_LS_KEY, JSON.stringify(all.slice(0, 120)));
+  } catch(e) {}
 }
 async function listarSnapshots() {
   try { const all = await dbGetAll(STORE_SNAPSHOTS); all.sort((a,b)=>b.ts-a.ts); return all; }
-  catch(e) { return []; }
+  catch(e) { const all = leerSnapshotsLS(); all.sort((a,b)=>b.ts-a.ts); return all; }
 }
 
 // ============================================================
@@ -839,98 +911,89 @@ document.getElementById('btnConfirmExport').addEventListener('click', async () =
 // ============================================================
 // EXCEL
 // ============================================================
+// Motor XLSX PROPIO (app-xlsx.js) - sin CDN, sin internet, con formato fiel
 async function exportarExcel(incluirPersonal, incluirHistorico) {
-  if (state.areas.length === 0) { showToast('No hay datos','error'); return; }
+  if (state.areas.length === 0) { showToast('No hay áreas','error'); return; }
+  const XN = window.XLSXNATIVO;
+  if (!XN) { showToast('Motor de Excel no disponible','error'); return; }
+
   const fecha = state.fechaActiva;
-  const wb = XLSX.utils.book_new();
   const menusUnicos = [];
   state.areas.forEach(a => a.menus.forEach(m => { if (!menusUnicos.includes(m.nombre)) menusUnicos.push(m.nombre); }));
 
-  const wsData = [];
-  wsData.push(['', 'SOLICITUD DE COMIDAS EMPACADAS']);
-  wsData.push(['', 'COMEDOR ADMINISTRATIVO PETROCEDENO']);
-  wsData.push([`FECHA ${formatFecha(fecha)}`, ...menusUnicos]);
+  const hojas = [];
 
-  const firstDataRow = wsData.length + 1;
-  state.areas.forEach(a => {
-    const fila = [a.nombre];
-    menusUnicos.forEach(m => {
-      const idx = a.menus.findIndex(x => x.nombre === m);
-      fila.push((idx >= 0 && a.datos[fecha]) ? (a.datos[fecha][idx] || 0) : 0);
-    });
-    wsData.push(fila);
-  });
+  // 1) Hoja principal: replica el formato del Excel original
+  hojas.push(XN.hojaSolicitud({ areas: state.areas, fecha, menusUnicos }));
 
-  const totalRowIdx = wsData.length + 1;
-  const totalRow = ['TOTAL'];
-  menusUnicos.forEach((m, i) => {
-    const colLetter = String.fromCharCode(66 + i);
-    totalRow.push({ f: `SUM(${colLetter}${firstDataRow}:${colLetter}${totalRowIdx - 1})`, v: totalPorMenu(state.areas, fecha, i) });
-  });
-  wsData.push(totalRow);
-  wsData.push([]);
-  wsData.push([`ALMUERZOS EMPACADOS SOLICITADOS ${totalGeneralFecha(state.areas, fecha)}`]);
-  menusUnicos.forEach((m, i) => wsData.push([`${m} = ${totalPorMenu(state.areas, fecha, i)}`]));
-
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [{ wch: 24 }, ...menusUnicos.map(()=>({ wch: 10 }))];
-  XLSX.utils.book_append_sheet(wb, ws, 'Solicitud');
-
+  // 2) Hoja por área (opcional), con personal de entrega
   if (incluirPersonal) {
-    state.areas.forEach(a => {
-      const vals = a.datos[fecha] || [];
-      const data = [
-        ['SOLICITUD DE COMIDAS EMPACADAS'],
-        ['COMEDOR ADMINISTRATIVO PETROCEDENO'],
-        [`FECHA ${formatFecha(fecha)}`],
-        [],
-        ['ÁREA', a.nombre],
-        [],
-        ['MENÚ', 'CANTIDAD']
-      ];
-      a.menus.forEach((m, i) => data.push([m.nombre, vals[i] || 0]));
-      data.push([]);
-      data.push(['TOTAL', totalAreaFecha(a, fecha)]);
-      const p = a.personal[fecha] || [];
-      if (p.length > 0) {
-        data.push([]); data.push(['PERSONAL DE LA ENTREGA']); data.push(['NOMBRE','CARGO']);
-        p.forEach(x => data.push([x.nombre, x.rol || '']));
-      }
-      const wsA = XLSX.utils.aoa_to_sheet(data);
-      wsA['!cols'] = [{ wch: 22 }, { wch: 16 }];
-      let sn = a.nombre.replace(/[\\\/\?\*\[\]:]/g,'').substring(0,28) || 'Area';
-      let base = sn, i = 2;
-      while (wb.SheetNames.includes(sn)) { sn = base.substring(0,28) + '_' + i; i++; }
-      XLSX.utils.book_append_sheet(wb, wsA, sn);
-    });
+    state.areas.forEach(a => hojas.push(XN.hojaArea(a, fecha)));
   }
 
+  // 3) Hoja de histórico (opcional)
   if (incluirHistorico) {
     const snaps = await listarSnapshots();
-    const data = [['HISTÓRICO DE ENTREGAS'], ['Fecha','Hora','Área', ...menusUnicos, 'Total Área','Personal']];
-    snaps.forEach(s => {
-      s.areas.forEach(a => {
-        const fila = [formatFecha(s.fecha), new Date(s.ts).toLocaleTimeString('es-VE'), a.nombre];
-        menusUnicos.forEach(m => { const i = a.menus.indexOf(m); fila.push(i>=0?(a.valores[i]||0):0); });
-        fila.push(a.valores.reduce((sum,v)=>sum+(Number(v)||0),0));
-        fila.push((a.personal||[]).map(p=>p.nombre).join(', '));
-        data.push(fila);
-      });
-    });
-    const wsH = XLSX.utils.aoa_to_sheet(data);
-    wsH['!cols'] = [{wch:12},{wch:10},{wch:18}, ...menusUnicos.map(()=>({wch:8})), {wch:10},{wch:30}];
-    XLSX.utils.book_append_sheet(wb, wsH, 'Histórico');
+    hojas.push(XN.hojaHistorico(snaps, menusUnicos, formatFecha));
   }
 
-  XLSX.writeFile(wb, `Comidas_Empacadas_${fecha}.xlsx`);
-  showToast('Excel exportado','success');
+  // Nombres de hoja únicos y válidos (Excel: máx 31, sin : \ / ? * [ ])
+  const usados = {};
+  hojas.forEach(h => {
+    const base = (h.name || 'Hoja').replace(/[\\\/\?\*\[\]:]/g, '').substring(0, 28) || 'Hoja';
+    let n = base, i = 2;
+    while (usados[n.toLowerCase()]) { n = base.substring(0, 26) + '_' + i; i++; }
+    usados[n.toLowerCase()] = 1;
+    h.name = n;
+  });
+
+  try {
+    const bytes = XN.workbook(hojas);
+    XN.descargar(bytes, `Comidas_Empacadas_${fecha}.xlsx`);
+    showToast('Excel exportado · ' + hojas.length + ' hoja' + (hojas.length > 1 ? 's' : '') +
+              ' · ' + totalGeneralFecha(state.areas, fecha) + ' almuerzos', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Error al generar el Excel: ' + e.message, 'error');
+  }
 }
 
 // ============================================================
 // PDF (con autoTable: encabezados azules + texto blanco garantizado)
 // ============================================================
+// jsPDF se carga SOLO al pedir PDF (requiere internet la 1era vez).
+// El Excel NO lo necesita: funciona 100% sin conexión.
+let _pdfCargando = null;
+function cargarJsPDF() {
+  if (window.jspdf) return Promise.resolve(true);
+  if (_pdfCargando) return _pdfCargando;
+  const base = 'https://cdn.jsdelivr.net/npm/';
+  _pdfCargando = new Promise(resolve => {
+    const s1 = document.createElement('script');
+    s1.src = base + 'jspdf@2.5.1/dist/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = base + 'jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js';
+      s2.onload = () => resolve(true);
+      s2.onerror = () => resolve(false);
+      document.head.appendChild(s2);
+    };
+    s1.onerror = () => resolve(false);
+    document.head.appendChild(s1);
+  });
+  return _pdfCargando;
+}
+
 async function exportarPDF(incluirPersonal) {
-  if (state.areas.length === 0) { showToast('No hay datos','error'); return; }
+  if (state.areas.length === 0) { showToast('No hay áreas','error'); return; }
+  if (!window.jspdf) {
+    showToast('Cargando motor PDF…');
+    const ok = await cargarJsPDF();
+    if (!ok || !window.jspdf) {
+      showToast('El PDF necesita internet la primera vez. El Excel funciona sin conexión.', 'error');
+      return;
+    }
+  }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const fecha = state.fechaActiva;
@@ -1169,6 +1232,52 @@ document.getElementById('pwaInstallBtn').addEventListener('click', () => {
 });
 
 // ============================================================
+// TEMA CLARO / OSCURO
+// ============================================================
+function aplicarTema(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const b = document.getElementById('btnTema');
+  if (b) b.textContent = t === 'dark' ? '☀️' : '🌙';
+  const m = document.getElementById('metaThemeColor');
+  if (m) m.setAttribute('content', t === 'dark' ? '#0b1220' : '#0d3b66');
+  try { localStorage.setItem('comedor_tema', t); } catch (e) {}
+}
+document.getElementById('btnTema').addEventListener('click', () => {
+  const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  aplicarTema(actual === 'dark' ? 'light' : 'dark');
+});
+aplicarTema(document.documentElement.getAttribute('data-theme') || 'light');
+
+// Aviso cuando ya está instalada y funcionando en modo_app
+(function(){
+  const enApp = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const p = document.getElementById('pwaPrompt');
+  if (enApp && p) p.classList.remove('show');
+})();
+
+// ============================================================
+// REGISTRO DEL SERVICE WORKER (solo http/https; en file:// no existe)
+// ============================================================
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              showToast('Actualización lista · reinicia la app', 'success');
+            }
+          });
+        });
+        console.log('SW registrado:', reg.scope);
+      })
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+
+// ============================================================
 // INIT
 // ============================================================
 async function init() {
@@ -1181,6 +1290,18 @@ async function init() {
   }
   initDateBar();
   showView('list');
+
+  // Atajos del manifest (icono largo en Android)
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('vista') === 'historial') {
+      const b = document.getElementById('btnSnapshots'); if (b) b.click();
+    }
+    if (q.get('accion') === 'excel') {
+      setTimeout(() => { const b = document.getElementById('btnExportExcel'); if (b) b.click(); }, 400);
+    }
+  } catch (e) {}
+
   setTimeout(async () => {
     const hoy = todayISO();
     const snaps = await listarSnapshots();
