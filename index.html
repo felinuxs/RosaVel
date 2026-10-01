@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" id="metaThemeColor" content="#0d3b66">
-<meta name="description" content="Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petroceno.">
-<title>Comedor Petroceno · Control de Comidas</title>
+<meta name="description" content="Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petrocedeño.">
+<title>Comedor Petrocedeño · Control de Comidas</title>
 
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -29,6 +29,10 @@
 }
 html,body{height:100%;overflow-x:hidden}
 body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column;min-height:100vh;max-width:520px;margin:0 auto;position:relative}
+/* --- Copiar/pegar solo dentro de los campos de entrada (diálogos de captura) --- */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+input::placeholder,textarea::placeholder{-webkit-user-select:none;user-select:none}
 
 .app-header{background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:50;box-shadow:0 4px 12px rgba(13,59,102,.25)}
 .app-header .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
@@ -189,7 +193,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radi
   <div class="brand">
     <div class="logo">🍱</div>
     <div class="brand-text">
-      <h1 id="headerTitle">Comedor Petroceno</h1>
+      <h1 id="headerTitle">Comedor Petrocedeño</h1>
       <small id="headerSub">Control de comidas empacadas</small>
     </div>
   </div>
@@ -353,7 +357,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radi
 // ============================================================
 // PERSISTENCIA IndexedDB
 // ============================================================
-const DB_NAME = 'comedor_petroceno';
+const DB_NAME = 'comedor_petrocedeno';
 const DB_VERSION = 1;
 const STORE_STATE = 'state';
 const STORE_SNAPSHOTS = 'snapshots';
@@ -420,7 +424,7 @@ function dbGetAll(store) {
 // ============================================================
 // ESTADO
 // ============================================================
-const STORAGE_FALLBACK_KEY = 'comedor_petroceno_v2';
+const STORAGE_FALLBACK_KEY = 'comedor_petrocedeno_v2';
 let state = { areas: [], fechaActiva: todayISO(), currentView: 'list', currentAreaId: null };
 
 function todayISO() { return new Date().toISOString().slice(0,10); }
@@ -554,7 +558,7 @@ function showView(view) {
   document.getElementById({ list:'viewList', detail:'viewDetail', snapshots:'viewSnapshots' }[view]).classList.add('active');
   document.getElementById('dateBar').style.display = (view === 'detail' || view === 'snapshots') ? 'none' : 'flex';
   if (view === 'list') {
-    document.getElementById('headerTitle').textContent = 'Comedor Petroceno';
+    document.getElementById('headerTitle').textContent = 'Comedor Petrocedeño';
     document.getElementById('headerSub').textContent = 'Control de comidas empacadas';
     renderList();
   } else if (view === 'detail') renderDetail();
@@ -949,7 +953,7 @@ async function exportarExcel(incluirPersonal, incluirHistorico) {
 
   try {
     const bytes = XN.workbook(hojas);
-    XN.descargar(bytes, `Comidas_Empacadas_${fecha}.xlsx`);
+    descargarArchivo(bytes, `Comidas_Empacadas_${fecha}.xlsx`, XN.MIME_XLSX);
     showToast('Excel exportado · ' + hojas.length + ' hoja' + (hojas.length > 1 ? 's' : '') +
               ' · ' + totalGeneralFecha(state.areas, fecha) + ' almuerzos', 'success');
   } catch (e) {
@@ -961,26 +965,29 @@ async function exportarExcel(incluirPersonal, incluirHistorico) {
 // ============================================================
 // PDF (con autoTable: encabezados azules + texto blanco garantizado)
 // ============================================================
-// jsPDF se carga SOLO al pedir PDF (requiere internet la 1era vez).
-// El Excel NO lo necesita: funciona 100% sin conexión.
+// jsPDF está EMBEBIDO en la carpeta vendor/ -> funciona SIEMPRE, sin internet.
+// Si por lo que sea no estuviera, se cae de vuelta al CDN.
 let _pdfCargando = null;
 function cargarJsPDF() {
-  if (window.jspdf) return Promise.resolve(true);
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(true);
   if (_pdfCargando) return _pdfCargando;
-  const base = 'https://cdn.jsdelivr.net/npm/';
-  _pdfCargando = new Promise(resolve => {
-    const s1 = document.createElement('script');
-    s1.src = base + 'jspdf@2.5.1/dist/jspdf.umd.min.js';
-    s1.onload = () => {
-      const s2 = document.createElement('script');
-      s2.src = base + 'jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js';
-      s2.onload = () => resolve(true);
-      s2.onerror = () => resolve(false);
-      document.head.appendChild(s2);
-    };
-    s1.onerror = () => resolve(false);
-    document.head.appendChild(s1);
+  const local = [
+    'vendor/jspdf.umd.min.js',
+    'vendor/jspdf.plugin.autotable.min.js'
+  ];
+  const remoto = [
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'
+  ];
+  const cadena = (urls, i) => new Promise(res => {
+    if (i >= urls.length) return res(false);
+    const s = document.createElement('script');
+    s.src = urls[i];
+    s.onload  = () => res(i + 1 >= urls.length ? true : cadena(urls, i + 1));
+    s.onerror = () => res(cadena(urls, i + 1));
+    document.head.appendChild(s);
   });
+  _pdfCargando = cadena(local, 0).then(ok => ok || cadena(remoto, 0));
   return _pdfCargando;
 }
 
@@ -990,7 +997,7 @@ async function exportarPDF(incluirPersonal) {
     showToast('Cargando motor PDF…');
     const ok = await cargarJsPDF();
     if (!ok || !window.jspdf) {
-      showToast('El PDF necesita internet la primera vez. El Excel funciona sin conexión.', 'error');
+      showToast('No se pudo cargar el motor PDF. El Excel funciona sin conexión.', 'error');
       return;
     }
   }
@@ -1206,9 +1213,9 @@ async function exportarPDF(incluirPersonal) {
   // Firma desarrollador
   doc.setFontSize(7);
   doc.setTextColor(150,150,150);
-  doc.text('Desarrollado por Rosa Elvira Velásquez · Petroceno', pageW/2, pageH - 5, { align:'center' });
+  doc.text('Desarrollado por Rosa Elvira Velásquez · Petrocedeño', pageW/2, pageH - 5, { align:'center' });
 
-  doc.save(`Comidas_Empacadas_${fecha}.pdf`);
+  descargarArchivo(new Uint8Array(doc.output('arraybuffer')), `Comidas_Empacadas_${fecha}.pdf`, 'application/pdf');
   showToast('PDF exportado','success');
 }
 
@@ -1314,6 +1321,127 @@ async function init() {
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
 });
+
+// ============================================================
+// COPIAR / PEGAR / CORTAR: SOLO dentro de los campos de captura
+// ------------------------------------------------------------
+// Se permite copiar/pegar únicamente dentro de <input>, <textarea>
+// y elementos editables: es decir, exactamente donde el usuario
+// tiene que introducir números o texto. En cualquier otro lugar
+// (tablas, totales, nombres de área, menús, historial…) queda
+// bloqueado, igual que el menú contextual y Ctrl+C/X/V.
+// ============================================================
+(function bloquearPortapapeles() {
+  const OK = new Set(['INPUT', 'TEXTAREA']);
+
+  function editable(nodo) {
+    let el = nodo;
+    if (el && el.nodeType !== 1) el = el.parentElement;
+    while (el && el.nodeType === 1) {
+      if (OK.has(el.tagName)) {
+        const t = (el.type || '').toLowerCase();
+        // los que no admiten texto (checkbox, date, number...) no cuentan
+        return !['checkbox', 'radio', 'button', 'submit', 'range', 'color', 'file'].includes(t);
+      }
+      if (el.isContentEditable) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  let ultimoAviso = 0;
+  function avisar() {
+    const ahora = Date.now();
+    if (ahora - ultimoAviso < 2500) return;   // no spamear toasts
+    ultimoAviso = ahora;
+    showToast('Copiar y pegar solo se permite en los campos de captura', 'error');
+  }
+
+  const Stop = ['copy', 'cut', 'paste'];
+  Stop.forEach(ev => document.addEventListener(ev, e => {
+    const destino = e.target && e.target.nodeType === 1 ? e.target : document.activeElement;
+    if (!editable(destino) && !editable(document.activeElement)) { e.preventDefault(); avisar(); }
+  }, true));
+
+  // arrastre de texto fuera de la app
+  document.addEventListener('dragstart', e => {
+    if (!editable(e.target) && !editable(document.activeElement)) e.preventDefault();
+  }, true);
+
+  // menú contextual (click derecho / mantener pulsado)
+  document.addEventListener('contextmenu', e => {
+    if (editable(e.target)) return;          // en los campos sí se permite
+    e.preventDefault();
+  }, true);
+
+  // selección de texto fuera de los campos
+  document.addEventListener('selectstart', e => {
+    if (!editable(e.target)) e.preventDefault();
+  }, true);
+
+  // atajos de teclado (Ctrl/⌘ + C, X, V, A)
+  document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const k = (e.key || '').toLowerCase();
+    if (!['c', 'x', 'v', 'a'].includes(k)) return;
+    if (editable(document.activeElement) || editable(e.target)) return;
+    e.preventDefault();
+    avisar();
+  }, true);
+})();
+
+// ============================================================
+// GUARDAR ARCHIVOS (Excel / PDF)
+// ------------------------------------------------------------
+// En navegador o PWA se descarga normal. Cuando la app corre
+// empaquetada (.exe con WebView2 o .apk con WebView), delega en
+// el puente nativo para que el archivo caiga en la carpeta que
+// el usuario tiene asignada en su teléfono / computador.
+// ============================================================
+function bytesABase64(bytes) {
+  let bin = '';
+  const LOTE = 0x8000;
+  for (let i = 0; i < bytes.length; i += LOTE) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + LOTE));
+  }
+  return btoa(bin);
+}
+
+function descargarArchivo(bytes, nombre, mime) {
+  const N = window.ComedorNativo;
+  if (N && typeof N.guardarArchivo === 'function') {
+    try {
+      N.guardarArchivo(bytesABase64(bytes), nombre);
+      return true;
+    } catch (e) {
+      console.warn('Puente nativo falló, se usa la descarga del navegador:', e);
+    }
+  }
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime || 'application/octet-stream' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return true;
+}
+
+// Respuesta del puente nativo (.exe / .apk): "guardado" o error
+window.comedorRespuestaNativa = function (mensaje) {
+  if (mensaje && /error/i.test(mensaje)) showToast(mensaje, 'error');
+};
+
+// Botón "atrás" de Android: cierra el diálogo abierto, o vuelve al
+// listado; si ya está en el listado, la app nativa se cierra.
+window.comedorAtras = function () {
+  const abierto = document.querySelector('.modal-bg.show');
+  if (abierto) { abierto.classList.remove('show'); return true; }
+  if (state.currentView === 'detail') { showView('list'); return true; }
+  if (state.currentView === 'snapshots') { showView('list'); return true; }
+  return false;
+};
 
 init();
 </script>

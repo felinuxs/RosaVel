@@ -4,7 +4,7 @@
    Todo el app es LOCAL: no depende de ningun CDN para funcionar.
    Este SW cachea los archivos propios y sirve la app sin internet.
    ===================================================================== */
-const CACHE = 'comedor-petroceno-v2';
+const CACHE = 'comedor-petroceno-v3';
 
 const ASSETS = [
   './',
@@ -14,7 +14,10 @@ const ASSETS = [
   './offline.html',
   './icon-192.png',
   './icon-512.png',
-  './icon-maskable.png'
+  './icon-maskable.png',
+  // Motor PDF embebido: el PDF tambien funciona sin internet
+  './vendor/jspdf.umd.min.js',
+  './vendor/jspdf.plugin.autotable.min.js'
 ];
 
 /* ---------- Instalacion: cachea todo lo local ---------- */

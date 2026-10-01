@@ -1,5 +1,5 @@
 /* =====================================================================
-   COMEDOR PETROCENO · Generador XLSX nativo
+   COMEDOR PETROCEDENO · Generador XLSX nativo
    ---------------------------------------------------------------------
    Sustituye a SheetJS (CDN). Escribe un .xlsx real: ZIP(STORE)+XML a mano.
    Ventajas: 0 KB de CDN, funciona SIN INTERNET, y RESPETA el formato
@@ -164,8 +164,10 @@
     return zip(files);
   }
 
+  const MIME_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
   function descargar(bytes, nombre) {
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    const url = URL.createObjectURL(new Blob([bytes], { type: MIME_XLSX }));
     const a = document.createElement('a');
     a.href = url; a.download = nombre;
     document.body.appendChild(a); a.click(); a.remove();
@@ -307,5 +309,6 @@
   global.XLSXNATIVO = {
     workbook, descargar, hojaSolicitud, hojaArea, hojaHistorico,
     fechaLarga, fechaCorta, TITULO, SUBTITULO, col, esc, zip, crc32,
+    MIME_XLSX,
   };
 })(window);
