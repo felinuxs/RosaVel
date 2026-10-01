@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d3b66">
+<meta name="description" content="Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petroceno.">
+<title>Comedor Petroceno · Control de Comidas</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Comedor">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#0d3b66;--primary-light:#1d5a99;--primary-soft:#e6eefb;--accent:#f4a261;
+  --bg:#f4f7fc;--card:#fff;--text:#1a2433;--text-muted:#6b7c93;--border:#e2e9f5;
+  --danger:#d64545;--success:#2e7d32;--warning:#e08a00;
+  --shadow:0 4px 14px rgba(13,59,102,.08);
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column;min-height:100vh;max-width:520px;margin:0 auto;position:relative}
+
+.app-header{background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:50;box-shadow:0 4px 12px rgba(13,59,102,.25)}
+.app-header .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.app-header .brand .logo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.app-header .brand-text{min-width:0}
+.app-header h1{font-size:14px;font-weight:700;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-header small{font-size:9px;opacity:.8;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.header-actions{display:flex;gap:5px;flex-shrink:0}
+.icon-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:11px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;flex-shrink:0}
+.icon-btn:active{background:rgba(255,255,255,.3);transform:scale(.94)}
+
+.date-bar{background:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:45;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+.date-bar label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.date-bar input[type="date"]{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--primary);background:#f8fafd}
+.date-bar input[type="date"]:focus{outline:none;border-color:var(--primary);background:#fff}
+.date-bar .mini-btn{background:var(--primary-soft);border:none;color:var(--primary);width:36px;height:36px;border-radius:10px;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+.view{display:none;flex:1;flex-direction:column;padding-bottom:20px}
+.view.active{display:flex}
+
+.total-banner{margin:12px;padding:14px 16px;background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);position:relative;overflow:hidden}
+.total-banner::after{content:"🍱";position:absolute;right:-10px;bottom:-18px;font-size:70px;opacity:.12}
+.total-banner .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.85;font-weight:600}
+.total-banner .value{font-size:36px;font-weight:800;line-height:1;margin-top:4px}
+.total-banner .sub{font-size:10px;opacity:.8;margin-top:4px}
+.total-banner .mini-grid{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.total-banner .mini-grid span{background:rgba(255,255,255,.15);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+
+.section-title{padding:0 16px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);font-weight:700;margin-top:4px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.section-title button{padding:6px 12px;font-size:11px;font-weight:700;border:none;border-radius:20px;background:var(--primary-soft);color:var(--primary);cursor:pointer}
+
+.area-list{padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.area-card{background:var(--card);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);border:1px solid var(--border);cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.area-card:active{transform:scale(.98);background:#f8fbff}
+.area-card .avatar{width:40px;height:40px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.area-card .info{flex:1;min-width:0}
+.area-card .info .name{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.area-card .info .meta{font-size:10px;color:var(--text-muted);margin-top:1px}
+.area-card .total-chip{background:var(--primary);color:#fff;padding:5px 11px;border-radius:13px;font-size:13px;font-weight:800;flex-shrink:0}
+.area-card .menu-btn{background:transparent;border:none;color:var(--text-muted);font-size:18px;padding:4px;cursor:pointer;flex-shrink:0;line-height:1}
+
+.back-bar{padding:10px 14px 0}
+.back-btn{background:#fff;border:1px solid var(--border);color:var(--primary);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:var(--shadow)}
+.detail-header{margin:10px 12px;padding:14px 16px;background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.detail-header .name{font-size:19px;font-weight:800;line-height:1.1}
+.detail-header .date{font-size:10px;opacity:.85;margin-top:2px}
+.detail-header .total-big{text-align:right;flex-shrink:0}
+.detail-header .total-big .num{font-size:30px;font-weight:800;line-height:1}
+.detail-header .total-big .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;opacity:.85}
+
+.menu-form{padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.menu-row{background:var(--card);border-radius:14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.menu-row .label{font-size:13px;font-weight:700;color:var(--primary);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-row .stepper{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.stepper button{width:32px;height:32px;border-radius:10px;border:none;background:var(--primary-soft);color:var(--primary);font-size:17px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.stepper button:active{background:var(--primary);color:#fff}
+.stepper input{width:58px;padding:7px 4px;border:1.5px solid var(--border);border-radius:10px;text-align:center;font-size:15px;font-weight:800;color:var(--primary);background:#fff;-moz-appearance:textfield}
+.stepper input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(13,59,102,.1)}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.personal-box{margin:10px 12px;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.personal-box .title{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px}
+.personal-box .title button{background:var(--primary-soft);border:none;color:var(--primary);padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer}
+.person-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f4fa}
+.person-item:last-child{border-bottom:none}
+.person-item .p-name{flex:1;font-size:13px;font-weight:600}
+.person-item .p-role{font-size:10px;color:var(--text-muted);text-transform:uppercase}
+.person-item button{background:transparent;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:4px}
+
+.bottom-bar{position:sticky;bottom:0;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:6px;z-index:40;margin-top:auto}
+.bottom-bar button{flex:1;padding:12px 8px;border-radius:13px;border:none;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:.15s}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(13,59,102,.3)}
+.btn-primary:active{transform:scale(.97)}
+.btn-secondary{background:var(--primary-soft);color:var(--primary)}
+.btn-warning{background:#fff3e0;color:var(--warning)}
+
+.modal-bg{position:fixed;inset:0;background:rgba(13,30,55,.6);z-index:100;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 22px;width:100%;max-width:520px;box-shadow:0 -10px 30px rgba(0,0,0,.2);animation:slideUp .25s ease;max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h3{font-size:16px;font-weight:800;color:var(--primary);margin-bottom:4px}
+.modal .sub{font-size:11px;color:var(--text-muted);margin-bottom:14px}
+.modal label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:5px;margin-top:10px}
+.modal input,.modal select{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;color:var(--text);background:#f8fafd}
+.modal input:focus,.modal select:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(13,59,102,.1)}
+.modal-actions{display:flex;gap:8px;margin-top:18px}
+.modal-actions button{flex:1;padding:13px;border-radius:13px;border:none;font-size:13px;font-weight:700;cursor:pointer}
+.btn-cancel{background:var(--primary-soft);color:var(--primary)}
+.btn-confirm{background:var(--primary);color:#fff}
+.btn-delete{background:#fdeaea;color:var(--danger);flex:0 0 50px!important}
+
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--primary);color:#fff;padding:11px 18px;border-radius:30px;font-size:12px;font-weight:600;box-shadow:0 8px 20px rgba(13,59,102,.3);opacity:0;transition:.3s;z-index:200;white-space:nowrap;max-width:90%}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{background:var(--danger)}
+.toast.success{background:var(--success)}
+
+.empty{text-align:center;padding:36px 20px;color:var(--text-muted)}
+.empty .icon{font-size:44px;opacity:.3;margin-bottom:6px}
+.empty p{font-size:12px}
+
+.pwa-prompt{display:none;background:#fff;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--primary)}
+.pwa-prompt.show{display:flex}
+.pwa-prompt button{background:var(--primary);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer}
+
+.snap-item{background:#fff;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);margin-bottom:6px}
+.snap-item .snap-date{font-size:13px;font-weight:700;color:var(--primary);flex:1}
+.snap-item .snap-total{font-size:12px;font-weight:700;color:var(--text-muted)}
+.snap-item button{background:var(--primary-soft);color:var(--primary);border:none;padding:6px 12px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="logo">🍱</div>
+    <div class="brand-text">
+      <h1 id="headerTitle">Comedor Petroceno</h1>
+      <small id="headerSub">Control de comidas empacadas</small>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btnSnapshots" title="Histórico">📚</button>
+    <button class="icon-btn" id="btnExportExcel" title="Excel">📊</button>
+    <button class="icon-btn" id="btnExportPDF" title="PDF">📄</button>
+  </div>
+</header>
+
+<div class="pwa-prompt" id="pwaPrompt">
+  <span>📲 Instalar aplicación</span>
+  <button id="pwaInstallBtn">Instalar</button>
+</div>
+
+<div class="date-bar" id="dateBar">
+  <label>📅 Fecha activa</label>
+  <input type="date" id="globalDate">
+  <button class="mini-btn" id="btnToday" title="Hoy">⌂</button>
+</div>
+
+<main class="view active" id="viewList">
+  <div class="total-banner">
+    <div class="label">Total general · fecha activa</div>
+    <div class="value" id="totalGeneral">0</div>
+    <div class="sub" id="totalSub">0 áreas registradas</div>
+    <div class="mini-grid" id="menuMiniGrid"></div>
+  </div>
+  <div class="section-title">
+    <span>Áreas / Secciones</span>
+    <button id="btnAddArea">+ Agregar</button>
+  </div>
+  <div class="area-list" id="areaList"></div>
+  <div class="bottom-bar">
+    <button class="btn-primary" id="btnAddAreaBottom">➕ Nueva área</button>
+    <button class="btn-secondary" id="btnDuplicateDate">📋 Duplicar fecha</button>
+  </div>
+</main>
+
+<main class="view" id="viewDetail">
+  <div class="back-bar">
+    <button class="back-btn" id="btnBack">← Volver</button>
+  </div>
+  <div class="detail-header">
+    <div>
+      <div class="name" id="detailName">CCR</div>
+      <div class="date" id="detailDate">28-9-2026</div>
+    </div>
+    <div class="total-big">
+      <div class="num" id="detailTotal">0</div>
+      <div class="lbl">Total</div>
+    </div>
+  </div>
+  <div class="section-title">
+    <span>Menús del día</span>
+    <button id="btnEditArea">✏️ Editar</button>
+  </div>
+  <div class="menu-form" id="menuForm"></div>
+
+  <div class="personal-box">
+    <div class="title">
+      <span>👥 Personal de la entrega (opcional)</span>
+      <button id="btnAddPerson">+ Agregar</button>
+    </div>
+    <div id="personalList"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn-secondary" id="btnAddMenu">➕ Menú</button>
+    <button class="btn-primary" id="btnSaveArea">💾 Guardar</button>
+  </div>
+</main>
+
+<main class="view" id="viewSnapshots">
+  <div class="back-bar">
+    <button class="back-btn" id="btnBackFromSnap">← Volver</button>
+  </div>
+  <div class="section-title" style="margin-top:12px">
+    <span>📚 Histórico de días guardados</span>
+  </div>
+  <div style="padding:0 12px 20px" id="snapshotList"></div>
+</main>
+
+<div class="modal-bg" id="modalArea">
+  <div class="modal">
+    <h3 id="modalAreaTitle">Nueva área</h3>
+    <p class="sub" id="modalAreaSub">Crea una sección como CCR, MSOP, etc.</p>
+    <label>Nombre del área</label>
+    <input type="text" id="inputAreaName" placeholder="Ej: MANTENIMIENTO" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modalArea')">Cancelar</button>
+      <button class="btn-confirm" id="btnSaveAreaModal">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalMenu">
+  <div class="modal">
+    <h3 id="modalMenuTitle">Nuevo menú</h3>
+    <p class="sub">Agrega un tipo de menú.</p>
+    <label>Nombre del menú</label>
+    <input type="text" id="inputMenuName" placeholder="Ej: MENU 5" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modalMenu')">Cancelar</button>
+      <button class="btn-confirm" id="btnSaveMenuModal">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalPerson">
+  <div class="modal">
+    <h3>Agregar persona</h3>
+    <p class="sub">Personal que participó en la entrega.</p>
+    <label>Nombre completo</label>
+    <input type="text" id="inputPersonName" placeholder="Ej: Juan Pérez" autocomplete="off">
+    <label>Cargo / rol (opcional)</label>
+    <input type="text" id="inputPersonRole" placeholder="Ej: Supervisor" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modalPerson')">Cancelar</button>
+      <button class="btn-confirm" id="btnSavePerson">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalSnapshot">
+  <div class="modal">
+    <h3 id="snapTitle">Snapshot</h3>
+    <p class="sub" id="snapSub"></p>
+    <div id="snapContent" style="max-height:50vh;overflow-y:auto;margin-top:8px"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modalSnapshot')">Cerrar</button>
+      <button class="btn-confirm" id="btnRestoreSnap">Restaurar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalExportOpts">
+  <div class="modal">
+    <h3>Opciones de exportación</h3>
+    <p class="sub">Elige qué incluir en el archivo.</p>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:600;color:var(--text)">
+      <input type="checkbox" id="optIncludePersonal" style="width:auto"> Incluir personal de la entrega
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;font-weight:600;color:var(--text);margin-top:10px">
+      <input type="checkbox" id="optIncludeHistory" style="width:auto"> Incluir hoja de histórico (snapshots)
+    </label>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modalExportOpts')">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirmExport">Exportar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// SERVICE WORKER
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.warn('SW error:', err));
+  });
+}
+
+// ============================================================
+// PERSISTENCIA IndexedDB
+// ============================================================
+const DB_NAME = 'comedor_petroceno';
+const DB_VERSION = 1;
+const STORE_STATE = 'state';
+const STORE_SNAPSHOTS = 'snapshots';
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_STATE)) database.createObjectStore(STORE_STATE);
+      if (!database.objectStoreNames.contains(STORE_SNAPSHOTS)) {
+        const s = database.createObjectStore(STORE_SNAPSHOTS, { keyPath: 'id' });
+        s.createIndex('fecha', 'fecha', { unique: false });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e);
+  });
+}
+function dbGet(store, key) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readonly');
+    const r = tx.objectStore(store).get(key);
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function dbPut(store, value, key) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readwrite');
+    const os = tx.objectStore(store);
+    const r = key !== undefined ? os.put(value, key) : os.put(value);
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(store, 'readonly');
+    const r = tx.objectStore(store).getAll();
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+
+// ============================================================
+// ESTADO
+// ============================================================
+const STORAGE_FALLBACK_KEY = 'comedor_petroceno_v2';
+let state = { areas: [], fechaActiva: todayISO(), currentView: 'list', currentAreaId: null };
+
+function todayISO() { return new Date().toISOString().slice(0,10); }
+function uid() { return 'a_' + Math.random().toString(36).substr(2,9); }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast ' + type, 2400);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+
+function totalAreaFecha(area, fecha) {
+  const vals = area.datos[fecha] || [];
+  return vals.reduce((s, v) => s + (Number(v) || 0), 0);
+}
+function totalGeneralFecha(areas, fecha) {
+  return areas.reduce((s, a) => s + totalAreaFecha(a, fecha), 0);
+}
+function totalPorMenu(areas, fecha, menuIdx) {
+  return areas.reduce((s, a) => {
+    const vals = a.datos[fecha] || [];
+    return s + (Number(vals[menuIdx]) || 0);
+  }, 0);
+}
+function areasConDatos(areas, fecha) {
+  return areas.filter(a => a.datos[fecha] && a.datos[fecha].some(v => v > 0));
+}
+function formatFecha(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${parseInt(d)}-${parseInt(m)}-${y}`;
+}
+
+async function saveState() {
+  try {
+    await dbPut(STORE_STATE, { areas: state.areas, fechaActiva: state.fechaActiva }, 'main');
+  } catch(e) {
+    try { localStorage.setItem(STORAGE_FALLBACK_KEY, JSON.stringify({ areas: state.areas, fechaActiva: state.fechaActiva })); } catch(_) {}
+  }
+}
+async function loadState() {
+  try {
+    const data = await dbGet(STORE_STATE, 'main');
+    if (data && Array.isArray(data.areas)) {
+      state.areas = data.areas;
+      state.fechaActiva = data.fechaActiva || todayISO();
+      return true;
+    }
+  } catch(e) {}
+  try {
+    const raw = localStorage.getItem(STORAGE_FALLBACK_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (p && Array.isArray(p.areas)) { state.areas = p.areas; state.fechaActiva = p.fechaActiva || todayISO(); return true; }
+    }
+  } catch(e) {}
+  return false;
+}
+
+// ============================================================
+// DATOS INICIALES
+// ============================================================
+function loadInitialData() {
+  const fecha = '2026-09-28';
+  const base = ['MENU 1','MENU 2','MENU 3','MENU 4','DIETA'];
+  const arr = [
+    { nombre:'CCR',           valores:[7,6,7,6,8] },
+    { nombre:'CCR ADM',       valores:[3,2,3,2,9] },
+    { nombre:'DSI',           valores:[4,2,2,0,3] },
+    { nombre:'LABORATORIO',   valores:[4,4,0,0,0] },
+    { nombre:'MSOP',          valores:[0,0,39,0,8] },
+    { nombre:'SALUD',         valores:[0,0,1,0,1] },
+    { nombre:'PLANIFICACION', valores:[2,1,0,0,6] },
+    { nombre:'BOMBEROS',      valores:[0,0,2,0,2] }
+  ];
+  return arr.map(a => ({
+    id: uid(), nombre: a.nombre,
+    menus: base.map(n => ({ nombre: n })),
+    datos: { [fecha]: a.valores },
+    personal: {}
+  }));
+}
+
+// ============================================================
+// SNAPSHOTS
+// ============================================================
+async function crearSnapshot(fecha, motivo='manual') {
+  const hoy = areasConDatos(state.areas, fecha);
+  if (hoy.length === 0) return null;
+  const snap = {
+    id: 'snap_' + fecha + '_' + Date.now(),
+    fecha, ts: Date.now(), motivo,
+    total: totalGeneralFecha(state.areas, fecha),
+    areas: JSON.parse(JSON.stringify(hoy.map(a => ({
+      nombre: a.nombre,
+      menus: a.menus.map(m => m.nombre),
+      valores: a.datos[fecha] || [],
+      personal: a.personal[fecha] || []
+    }))))
+  };
+  try { await dbPut(STORE_SNAPSHOTS, snap); return snap; } catch(e) { return null; }
+}
+async function listarSnapshots() {
+  try { const all = await dbGetAll(STORE_SNAPSHOTS); all.sort((a,b)=>b.ts-a.ts); return all; }
+  catch(e) { return []; }
+}
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+function showView(view) {
+  state.currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById({ list:'viewList', detail:'viewDetail', snapshots:'viewSnapshots' }[view]).classList.add('active');
+  document.getElementById('dateBar').style.display = (view === 'detail' || view === 'snapshots') ? 'none' : 'flex';
+  if (view === 'list') {
+    document.getElementById('headerTitle').textContent = 'Comedor Petroceno';
+    document.getElementById('headerSub').textContent = 'Control de comidas empacadas';
+    renderList();
+  } else if (view === 'detail') renderDetail();
+  else if (view === 'snapshots') renderSnapshots();
+  window.scrollTo(0,0);
+}
+function openArea(id) { state.currentAreaId = id; showView('detail'); }
+function goBack() { state.currentAreaId = null; showView('list'); }
+
+function initDateBar() {
+  const inp = document.getElementById('globalDate');
+  inp.value = state.fechaActiva;
+  inp.addEventListener('change', () => {
+    state.fechaActiva = inp.value || todayISO();
+    saveState(); renderList();
+  });
+  document.getElementById('btnToday').addEventListener('click', () => {
+    state.fechaActiva = todayISO();
+    inp.value = state.fechaActiva;
+    saveState(); renderList();
+  });
+}
+
+// ============================================================
+// RENDER LISTA
+// ============================================================
+function renderList() {
+  const fecha = state.fechaActiva;
+  const areas = state.areas;
+  document.getElementById('totalGeneral').textContent = totalGeneralFecha(areas, fecha);
+  const activas = areas.filter(a => a.datos[fecha]);
+  document.getElementById('totalSub').textContent = `${activas.length} de ${areas.length} áreas con datos`;
+
+  const menusUnicos = [];
+  areas.forEach(a => a.menus.forEach(m => { if (!menusUnicos.includes(m.nombre)) menusUnicos.push(m.nombre); }));
+  document.getElementById('menuMiniGrid').innerHTML = menusUnicos.map((m, i) =>
+    `<span>${escapeHtml(m)}: ${totalPorMenu(areas, fecha, i)}</span>`
+  ).join('');
+
+  const list = document.getElementById('areaList');
+  if (areas.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="icon">📋</div><p>No hay áreas registradas.</p></div>`;
+    return;
+  }
+  list.innerHTML = areas.map(a => {
+    const t = totalAreaFecha(a, fecha);
+    const inicial = a.nombre.charAt(0).toUpperCase();
+    const tiene = !!a.datos[fecha];
+    return `
+      <div class="area-card" data-id="${a.id}">
+        <div class="avatar">${inicial}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(a.nombre)}</div>
+          <div class="meta">${a.menus.length} menús · ${tiene ? 'con datos hoy' : 'sin datos hoy'}</div>
+        </div>
+        <div class="total-chip">${t}</div>
+        <button class="menu-btn" data-menu-id="${a.id}">⋮</button>
+      </div>`;
+  }).join('');
+
+  list.querySelectorAll('.area-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.menu-btn')) return;
+      openArea(card.dataset.id);
+    });
+  });
+  list.querySelectorAll('.menu-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.menuId;
+      const area = state.areas.find(a => a.id === id);
+      if (!area) return;
+      const accion = prompt(`"${area.nombre}"\n\nEscribe:\n  "editar"\n  "eliminar"`, 'editar');
+      if (!accion) return;
+      const a = accion.trim().toLowerCase();
+      if (a === 'editar') {
+        const nuevo = prompt('Nuevo nombre:', area.nombre);
+        if (nuevo && nuevo.trim()) { area.nombre = nuevo.trim().toUpperCase(); saveState(); renderList(); showToast('Renombrada','success'); }
+      } else if (a === 'eliminar') {
+        if (confirm(`¿Eliminar "${area.nombre}"?`)) { state.areas = state.areas.filter(x=>x.id!==id); saveState(); renderList(); showToast('Eliminada','error'); }
+      }
+    });
+  });
+}
+
+// ============================================================
+// RENDER DETALLE
+// ============================================================
+function renderDetail() {
+  const area = state.areas.find(a => a.id === state.currentAreaId);
+  if (!area) { goBack(); return; }
+  const fecha = state.fechaActiva;
+  document.getElementById('headerTitle').textContent = area.nombre;
+  document.getElementById('headerSub').textContent = formatFecha(fecha);
+  document.getElementById('detailName').textContent = area.nombre;
+  document.getElementById('detailDate').textContent = formatFecha(fecha);
+  document.getElementById('detailTotal').textContent = totalAreaFecha(area, fecha);
+
+  if (!area.datos[fecha]) area.datos[fecha] = area.menus.map(() => 0);
+  while (area.datos[fecha].length < area.menus.length) area.datos[fecha].push(0);
+  area.datos[fecha] = area.datos[fecha].slice(0, area.menus.length);
+
+  const form = document.getElementById('menuForm');
+  if (area.menus.length === 0) {
+    form.innerHTML = `<div class="empty"><div class="icon">🍽️</div><p>No hay menús.</p></div>`;
+  } else {
+    form.innerHTML = area.menus.map((m, i) => `
+      <div class="menu-row">
+        <div class="label" data-label-idx="${i}">${escapeHtml(m.nombre)}</div>
+        <div class="stepper">
+          <button data-action="dec" data-idx="${i}">−</button>
+          <input type="number" min="0" step="1" value="${area.datos[fecha][i] || 0}" data-idx="${i}" inputmode="numeric">
+          <button data-action="inc" data-idx="${i}">+</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  form.querySelectorAll('button[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.idx);
+      const acc = btn.dataset.action;
+      if (acc === 'inc') area.datos[fecha][i] = (Number(area.datos[fecha][i])||0) + 1;
+      if (acc === 'dec') area.datos[fecha][i] = Math.max(0, (Number(area.datos[fecha][i])||0) - 1);
+      saveState(); renderDetail();
+    });
+  });
+  form.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = parseInt(inp.dataset.idx);
+      let v = parseInt(inp.value,10); if (isNaN(v)||v<0) v=0;
+      area.datos[fecha][i] = v; saveState(); renderDetail();
+    });
+    inp.addEventListener('focus', e => e.target.select());
+  });
+  form.querySelectorAll('.label[data-label-idx]').forEach(lbl => {
+    lbl.addEventListener('click', () => {
+      const i = parseInt(lbl.dataset.labelIdx);
+      const n = prompt('Nombre del menú:', area.menus[i].nombre);
+      if (n && n.trim()) { area.menus[i].nombre = n.trim().toUpperCase(); saveState(); renderDetail(); }
+    });
+  });
+
+  renderPersonal(area, fecha);
+}
+
+function renderPersonal(area, fecha) {
+  const lista = area.personal[fecha] || [];
+  const cont = document.getElementById('personalList');
+  if (lista.length === 0) {
+    cont.innerHTML = `<p style="font-size:11px;color:var(--text-muted);text-align:center;padding:8px 0">Sin personal registrado</p>`;
+    return;
+  }
+  cont.innerHTML = lista.map((p, i) => `
+    <div class="person-item">
+      <div style="flex:1">
+        <div class="p-name">${escapeHtml(p.nombre)}</div>
+        ${p.rol ? `<div class="p-role">${escapeHtml(p.rol)}</div>` : ''}
+      </div>
+      <button data-del-person="${i}">✕</button>
+    </div>
+  `).join('');
+  cont.querySelectorAll('button[data-del-person]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.delPerson);
+      area.personal[fecha].splice(i, 1);
+      saveState(); renderPersonal(area, fecha);
+    });
+  });
+}
+
+// ============================================================
+// RENDER SNAPSHOTS
+// ============================================================
+async function renderSnapshots() {
+  const cont = document.getElementById('snapshotList');
+  cont.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-size:12px">Cargando...</p>';
+  const snaps = await listarSnapshots();
+  if (snaps.length === 0) {
+    cont.innerHTML = `<div class="empty"><div class="icon">📚</div><p>No hay snapshots guardados.</p></div>`;
+    return;
+  }
+  const porFecha = {};
+  snaps.forEach(s => { if (!porFecha[s.fecha]) porFecha[s.fecha] = []; porFecha[s.fecha].push(s); });
+  cont.innerHTML = Object.keys(porFecha).sort((a,b)=>b.localeCompare(a)).map(f => {
+    const items = porFecha[f].sort((a,b)=>b.ts-a.ts);
+    return `
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px;padding:0 4px">
+          📅 ${formatFecha(f)} · Total ${items[0].total}
+        </div>
+        ${items.map(s => `
+          <div class="snap-item">
+            <div style="flex:1">
+              <div class="snap-date">${new Date(s.ts).toLocaleTimeString('es-VE')} · ${s.motivo}</div>
+              <div class="snap-total">${s.areas.length} áreas · Total ${s.total}</div>
+            </div>
+            <button data-snap-id="${s.id}">Ver</button>
+          </div>
+        `).join('')}
+      </div>`;
+  }).join('');
+  cont.querySelectorAll('button[data-snap-id]').forEach(btn => {
+    btn.addEventListener('click', () => verSnapshot(btn.dataset.snapId));
+  });
+}
+async function verSnapshot(id) {
+  const all = await listarSnapshots();
+  const snap = all.find(s => s.id === id);
+  if (!snap) return;
+  document.getElementById('snapTitle').textContent = 'Snapshot ' + formatFecha(snap.fecha);
+  document.getElementById('snapSub').textContent = new Date(snap.ts).toLocaleString('es-VE') + ' · ' + snap.motivo;
+  const menus = snap.areas[0]?.menus || [];
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html += '<tr style="background:#e6eefb"><th style="padding:6px;text-align:left">ÁREA</th>';
+  menus.forEach(m => html += `<th style="padding:6px;text-align:center">${escapeHtml(m)}</th>`);
+  html += '<th style="padding:6px;text-align:center">TOTAL</th></tr>';
+  snap.areas.forEach(a => {
+    const t = a.valores.reduce((s,v)=>s+(Number(v)||0),0);
+    html += '<tr>';
+    html += `<td style="padding:6px;border-bottom:1px solid #eee;font-weight:600">${escapeHtml(a.nombre)}</td>`;
+    a.valores.forEach(v => html += `<td style="padding:6px;border-bottom:1px solid #eee;text-align:center">${v}</td>`);
+    html += `<td style="padding:6px;border-bottom:1px solid #eee;text-align:center;font-weight:700">${t}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('snapContent').innerHTML = html;
+  document.getElementById('btnRestoreSnap').onclick = () => restaurarSnapshot(snap);
+  openModal('modalSnapshot');
+}
+async function restaurarSnapshot(snap) {
+  if (!confirm(`¿Restaurar datos del ${formatFecha(snap.fecha)}?`)) return;
+  snap.areas.forEach(sa => {
+    const area = state.areas.find(a => a.nombre === sa.nombre);
+    if (area) {
+      area.datos[snap.fecha] = [...sa.valores];
+      area.personal[snap.fecha] = sa.personal ? JSON.parse(JSON.stringify(sa.personal)) : [];
+    }
+  });
+  await saveState();
+  closeModal('modalSnapshot');
+  showToast('Snapshot restaurado','success');
+  renderList();
+}
+
+// ============================================================
+// MODALES / ACCIONES
+// ============================================================
+let editingAreaId = null;
+function openModalArea(id) {
+  editingAreaId = id || null;
+  const t = document.getElementById('modalAreaTitle');
+  const s = document.getElementById('modalAreaSub');
+  const inp = document.getElementById('inputAreaName');
+  if (id) { const a = state.areas.find(x=>x.id===id); t.textContent='Editar área'; s.textContent='Modifica el nombre.'; inp.value=a.nombre; }
+  else { t.textContent='Nueva área'; s.textContent='Crea una sección.'; inp.value=''; }
+  openModal('modalArea');
+  setTimeout(() => inp.focus(), 250);
+}
+document.getElementById('btnSaveAreaModal').addEventListener('click', async () => {
+  const nombre = document.getElementById('inputAreaName').value.trim().toUpperCase();
+  if (!nombre) { showToast('Ingresa un nombre','error'); return; }
+  if (editingAreaId) { state.areas.find(a=>a.id===editingAreaId).nombre = nombre; showToast('Actualizada','success'); }
+  else {
+    state.areas.push({
+      id: uid(), nombre,
+      menus: ['MENU 1','MENU 2','MENU 3','MENU 4','DIETA'].map(n=>({nombre:n})),
+      datos: {}, personal: {}
+    });
+    showToast('Creada','success');
+  }
+  await saveState(); closeModal('modalArea');
+  if (state.currentView === 'detail' && editingAreaId) renderDetail(); else renderList();
+});
+
+let editingMenuIdx = -1;
+function openModalMenu(idx) {
+  const area = state.areas.find(a => a.id === state.currentAreaId);
+  if (!area) return;
+  editingMenuIdx = (typeof idx === 'number') ? idx : -1;
+  document.getElementById('modalMenuTitle').textContent = editingMenuIdx >= 0 ? 'Editar menú' : 'Nuevo menú';
+  document.getElementById('inputMenuName').value = editingMenuIdx >= 0 ? area.menus[editingMenuIdx].nombre : '';
+  openModal('modalMenu');
+  setTimeout(() => document.getElementById('inputMenuName').focus(), 250);
+}
+document.getElementById('btnSaveMenuModal').addEventListener('click', async () => {
+  const area = state.areas.find(a => a.id === state.currentAreaId);
+  if (!area) return;
+  const nombre = document.getElementById('inputMenuName').value.trim().toUpperCase();
+  if (!nombre) { showToast('Ingresa un nombre','error'); return; }
+  if (editingMenuIdx >= 0) area.menus[editingMenuIdx].nombre = nombre;
+  else area.menus.push({ nombre });
+  await saveState(); closeModal('modalMenu'); renderDetail();
+});
+
+document.getElementById('btnAddPerson').addEventListener('click', () => {
+  document.getElementById('inputPersonName').value = '';
+  document.getElementById('inputPersonRole').value = '';
+  openModal('modalPerson');
+  setTimeout(() => document.getElementById('inputPersonName').focus(), 250);
+});
+document.getElementById('btnSavePerson').addEventListener('click', async () => {
+  const area = state.areas.find(a => a.id === state.currentAreaId);
+  if (!area) return;
+  const nombre = document.getElementById('inputPersonName').value.trim();
+  const rol = document.getElementById('inputPersonRole').value.trim();
+  if (!nombre) { showToast('Ingresa un nombre','error'); return; }
+  if (!area.personal[state.fechaActiva]) area.personal[state.fechaActiva] = [];
+  area.personal[state.fechaActiva].push({ nombre, rol });
+  await saveState(); closeModal('modalPerson');
+  renderPersonal(area, state.fechaActiva);
+  showToast('Agregada','success');
+});
+
+document.getElementById('btnAddArea').addEventListener('click', () => openModalArea(null));
+document.getElementById('btnAddAreaBottom').addEventListener('click', () => openModalArea(null));
+document.getElementById('btnBack').addEventListener('click', goBack);
+document.getElementById('btnBackFromSnap').addEventListener('click', () => showView('list'));
+document.getElementById('btnEditArea').addEventListener('click', () => openModalArea(state.currentAreaId));
+document.getElementById('btnAddMenu').addEventListener('click', () => openModalMenu(-1));
+document.getElementById('btnSaveArea').addEventListener('click', async () => {
+  await saveState();
+  await crearSnapshot(state.fechaActiva, 'guardado manual');
+  showToast('Guardado y snapshot creado','success');
+  goBack();
+});
+document.getElementById('btnSnapshots').addEventListener('click', () => showView('snapshots'));
+document.getElementById('btnDuplicateDate').addEventListener('click', async () => {
+  const origen = state.fechaActiva;
+  const destino = prompt('¿A qué fecha duplicar?\n(YYYY-MM-DD)', todayISO());
+  if (!destino || !/^\d{4}-\d{2}-\d{2}$/.test(destino)) { showToast('Fecha inválida','error'); return; }
+  if (destino === origen) { showToast('Misma fecha','error'); return; }
+  let c = 0;
+  state.areas.forEach(a => { if (a.datos[origen]) { a.datos[destino] = [...a.datos[origen]]; c++; } });
+  await saveState();
+  showToast(`${c} áreas duplicadas`,'success');
+  state.fechaActiva = destino;
+  document.getElementById('globalDate').value = destino;
+  renderList();
+});
+
+// ============================================================
+// EXPORTAR
+// ============================================================
+let exportFormat = 'excel';
+document.getElementById('btnExportExcel').addEventListener('click', () => { exportFormat = 'excel'; openModal('modalExportOpts'); });
+document.getElementById('btnExportPDF').addEventListener('click', () => { exportFormat = 'pdf'; openModal('modalExportOpts'); });
+document.getElementById('btnConfirmExport').addEventListener('click', async () => {
+  const p = document.getElementById('optIncludePersonal').checked;
+  const h = document.getElementById('optIncludeHistory').checked;
+  closeModal('modalExportOpts');
+  if (exportFormat === 'excel') await exportarExcel(p, h);
+  else await exportarPDF(p);
+});
+
+// ============================================================
+// EXCEL
+// ============================================================
+async function exportarExcel(incluirPersonal, incluirHistorico) {
+  if (state.areas.length === 0) { showToast('No hay datos','error'); return; }
+  const fecha = state.fechaActiva;
+  const wb = XLSX.utils.book_new();
+  const menusUnicos = [];
+  state.areas.forEach(a => a.menus.forEach(m => { if (!menusUnicos.includes(m.nombre)) menusUnicos.push(m.nombre); }));
+
+  const wsData = [];
+  wsData.push(['', 'SOLICITUD DE COMIDAS EMPACADAS']);
+  wsData.push(['', 'COMEDOR ADMINISTRATIVO PETROCEDENO']);
+  wsData.push([`FECHA ${formatFecha(fecha)}`, ...menusUnicos]);
+
+  const firstDataRow = wsData.length + 1;
+  state.areas.forEach(a => {
+    const fila = [a.nombre];
+    menusUnicos.forEach(m => {
+      const idx = a.menus.findIndex(x => x.nombre === m);
+      fila.push((idx >= 0 && a.datos[fecha]) ? (a.datos[fecha][idx] || 0) : 0);
+    });
+    wsData.push(fila);
+  });
+
+  const totalRowIdx = wsData.length + 1;
+  const totalRow = ['TOTAL'];
+  menusUnicos.forEach((m, i) => {
+    const colLetter = String.fromCharCode(66 + i);
+    totalRow.push({ f: `SUM(${colLetter}${firstDataRow}:${colLetter}${totalRowIdx - 1})`, v: totalPorMenu(state.areas, fecha, i) });
+  });
+  wsData.push(totalRow);
+  wsData.push([]);
+  wsData.push([`ALMUERZOS EMPACADOS SOLICITADOS ${totalGeneralFecha(state.areas, fecha)}`]);
+  menusUnicos.forEach((m, i) => wsData.push([`${m} = ${totalPorMenu(state.areas, fecha, i)}`]));
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{ wch: 24 }, ...menusUnicos.map(()=>({ wch: 10 }))];
+  XLSX.utils.book_append_sheet(wb, ws, 'Solicitud');
+
+  if (incluirPersonal) {
+    state.areas.forEach(a => {
+      const vals = a.datos[fecha] || [];
+      const data = [
+        ['SOLICITUD DE COMIDAS EMPACADAS'],
+        ['COMEDOR ADMINISTRATIVO PETROCEDENO'],
+        [`FECHA ${formatFecha(fecha)}`],
+        [],
+        ['ÁREA', a.nombre],
+        [],
+        ['MENÚ', 'CANTIDAD']
+      ];
+      a.menus.forEach((m, i) => data.push([m.nombre, vals[i] || 0]));
+      data.push([]);
+      data.push(['TOTAL', totalAreaFecha(a, fecha)]);
+      const p = a.personal[fecha] || [];
+      if (p.length > 0) {
+        data.push([]); data.push(['PERSONAL DE LA ENTREGA']); data.push(['NOMBRE','CARGO']);
+        p.forEach(x => data.push([x.nombre, x.rol || '']));
+      }
+      const wsA = XLSX.utils.aoa_to_sheet(data);
+      wsA['!cols'] = [{ wch: 22 }, { wch: 16 }];
+      let sn = a.nombre.replace(/[\\\/\?\*\[\]:]/g,'').substring(0,28) || 'Area';
+      let base = sn, i = 2;
+      while (wb.SheetNames.includes(sn)) { sn = base.substring(0,28) + '_' + i; i++; }
+      XLSX.utils.book_append_sheet(wb, wsA, sn);
+    });
+  }
+
+  if (incluirHistorico) {
+    const snaps = await listarSnapshots();
+    const data = [['HISTÓRICO DE ENTREGAS'], ['Fecha','Hora','Área', ...menusUnicos, 'Total Área','Personal']];
+    snaps.forEach(s => {
+      s.areas.forEach(a => {
+        const fila = [formatFecha(s.fecha), new Date(s.ts).toLocaleTimeString('es-VE'), a.nombre];
+        menusUnicos.forEach(m => { const i = a.menus.indexOf(m); fila.push(i>=0?(a.valores[i]||0):0); });
+        fila.push(a.valores.reduce((sum,v)=>sum+(Number(v)||0),0));
+        fila.push((a.personal||[]).map(p=>p.nombre).join(', '));
+        data.push(fila);
+      });
+    });
+    const wsH = XLSX.utils.aoa_to_sheet(data);
+    wsH['!cols'] = [{wch:12},{wch:10},{wch:18}, ...menusUnicos.map(()=>({wch:8})), {wch:10},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, wsH, 'Histórico');
+  }
+
+  XLSX.writeFile(wb, `Comidas_Empacadas_${fecha}.xlsx`);
+  showToast('Excel exportado','success');
+}
+
+// ============================================================
+// PDF (con autoTable: encabezados azules + texto blanco garantizado)
+// ============================================================
+async function exportarPDF(incluirPersonal) {
+  if (state.areas.length === 0) { showToast('No hay datos','error'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const fecha = state.fechaActiva;
+  const menusUnicos = [];
+  state.areas.forEach(a => a.menus.forEach(m => { if (!menusUnicos.includes(m.nombre)) menusUnicos.push(m.nombre); }));
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  let y = 15;
+
+  // ============ ENCABEZADO DEL DOCUMENTO ============
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.setTextColor(13,59,102);
+  doc.text('SOLICITUD DE COMIDAS EMPACADAS', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(60,60,60);
+  doc.text('COMEDOR ADMINISTRATIVO PETROCEDENO', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(13,59,102);
+  doc.text(`FECHA ${formatFecha(fecha)}`, pageW/2, y, { align:'center' });
+  y += 6;
+
+  // ============ TABLA PRINCIPAL ============
+  const head = [['ÁREA', ...menusUnicos, 'TOTAL']];
+  const body = state.areas.map(a => {
+    const fila = [a.nombre];
+    menusUnicos.forEach(m => {
+      const i = a.menus.findIndex(x => x.nombre === m);
+      fila.push((i >= 0 && a.datos[fecha]) ? (a.datos[fecha][i] || 0) : 0);
+    });
+    fila.push(totalAreaFecha(a, fecha));
+    return fila;
+  });
+  const foot = [['TOTAL', ...menusUnicos.map((m,i) => totalPorMenu(state.areas, fecha, i)), totalGeneralFecha(state.areas, fecha)]];
+
+  // Dejamos el texto en oscuro antes de llamar a autoTable
+  doc.setTextColor(30,30,30);
+
+  doc.autoTable({
+    head: head,
+    body: body,
+    foot: foot,
+    startY: y,
+    theme: 'grid',
+    styles: {
+      font: 'helvetica',
+      fontSize: 9,
+      cellPadding: 2.5,
+      lineColor: [220, 228, 240],
+      lineWidth: 0.2,
+      textColor: [30, 30, 30],
+      fillColor: [255, 255, 255],
+      valign: 'middle',
+      halign: 'center'
+    },
+    headStyles: {
+      fillColor: [13, 59, 102],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 9,
+      halign: 'center',
+      valign: 'middle',
+      lineColor: [13, 59, 102],
+      lineWidth: 0.2
+    },
+    footStyles: {
+      fillColor: [230, 238, 251],
+      textColor: [13, 59, 102],
+      fontStyle: 'bold',
+      fontSize: 9,
+      halign: 'center',
+      valign: 'middle',
+      lineColor: [200, 215, 235],
+      lineWidth: 0.2
+    },
+    columnStyles: {
+      0: { halign: 'left', fontStyle: 'bold', cellWidth: 38 },
+      [menusUnicos.length + 1]: { fontStyle: 'bold' }
+    },
+    didParseCell: (data) => {
+      if (data.section === 'head') {
+        data.cell.styles.fillColor = [13, 59, 102];
+        data.cell.styles.textColor = [255, 255, 255];
+        data.cell.styles.fontStyle = 'bold';
+        if (data.column.index === 0) data.cell.styles.halign = 'left';
+      }
+      if (data.section === 'body') {
+        data.cell.styles.fillColor = [255, 255, 255];
+        data.cell.styles.textColor = [30, 30, 30];
+        if (data.column.index === 0) {
+          data.cell.styles.halign = 'left';
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.textColor = [13, 59, 102];
+        }
+      }
+      if (data.section === 'foot') {
+        data.cell.styles.fillColor = [230, 238, 251];
+        data.cell.styles.textColor = [13, 59, 102];
+        data.cell.styles.fontStyle = 'bold';
+        if (data.column.index === 0) data.cell.styles.halign = 'left';
+      }
+      if (data.section === 'body' && data.row.index % 2 === 1) {
+        data.cell.styles.fillColor = [245, 248, 253];
+      }
+    },
+    margin: { left: 12, right: 12, top: 15, bottom: 60 }
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
+
+  // ============ RESUMEN ============
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(11);
+  doc.setTextColor(13,59,102);
+  doc.text('ALMUERZOS EMPACADOS SOLICITADOS: ' + totalGeneralFecha(state.areas, fecha), 12, y);
+  y += 6;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.setTextColor(30,30,30);
+  menusUnicos.forEach((m, i) => {
+    doc.text(`${m} = ${totalPorMenu(state.areas, fecha, i)}`, 12, y);
+    y += 5;
+  });
+
+  // ============ PERSONAL (opcional) ============
+  if (incluirPersonal) {
+    y += 3;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(13,59,102);
+    doc.text('PERSONAL DE LA ENTREGA:', 12, y);
+    y += 5;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(30,30,30);
+    let hay = false;
+    state.areas.forEach(a => {
+      const p = a.personal[fecha] || [];
+      if (p.length > 0) {
+        if (y > pageH - 70) { doc.addPage(); y = 20; }
+        hay = true;
+        const txt = `${a.nombre}: ${p.map(x => x.nombre + (x.rol ? ' ('+x.rol+')' : '')).join(', ')}`;
+        const lines = doc.splitTextToSize(txt, pageW - 24);
+        doc.text(lines, 12, y);
+        y += lines.length * 4.5;
+      }
+    });
+    if (!hay) {
+      doc.setTextColor(120,120,120);
+      doc.text('(Sin personal registrado)', 12, y);
+      y += 5;
+    }
+  }
+
+  // ============ CUADROS DE FIRMA AL PIE ============
+  const firmaY = pageH - 50;
+  if (y > firmaY - 5) {
+    doc.addPage();
+  }
+  const cuadroAncho = (pageW - 36) / 2;
+  const cuadroAlto = 34;
+  const baseY = pageH - 48;
+
+  // Cuadro izquierdo: ENTREGADO POR
+  doc.setDrawColor(13,59,102);
+  doc.setLineWidth(0.4);
+  doc.rect(12, baseY, cuadroAncho, cuadroAlto);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(13,59,102);
+  doc.text('ENTREGADO POR:', 15, baseY + 6);
+  doc.setDrawColor(120,120,120);
+  doc.setLineWidth(0.3);
+  doc.line(15, baseY + 20, 12 + cuadroAncho - 3, baseY + 20);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(120,120,120);
+  doc.text('Firma', 12 + cuadroAncho/2, baseY + 24, { align:'center' });
+  doc.setDrawColor(200,200,200);
+  doc.rect(15, baseY + 26, cuadroAncho - 6, 5);
+  doc.setFontSize(7);
+  doc.text('Sello', 12 + cuadroAncho/2, baseY + 30, { align:'center' });
+
+  // Cuadro derecho: RECIBIDO POR
+  const rx = 12 + cuadroAncho + 12;
+  doc.setDrawColor(13,59,102);
+  doc.setLineWidth(0.4);
+  doc.rect(rx, baseY, cuadroAncho, cuadroAlto);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9);
+  doc.setTextColor(13,59,102);
+  doc.text('RECIBIDO POR:', rx + 3, baseY + 6);
+  doc.setDrawColor(120,120,120);
+  doc.setLineWidth(0.3);
+  doc.line(rx + 3, baseY + 20, rx + cuadroAncho - 3, baseY + 20);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(7);
+  doc.setTextColor(120,120,120);
+  doc.text('Firma', rx + cuadroAncho/2, baseY + 24, { align:'center' });
+  doc.setDrawColor(200,200,200);
+  doc.rect(rx + 3, baseY + 26, cuadroAncho - 6, 5);
+  doc.setFontSize(7);
+  doc.text('Sello', rx + cuadroAncho/2, baseY + 30, { align:'center' });
+
+  // Firma desarrollador
+  doc.setFontSize(7);
+  doc.setTextColor(150,150,150);
+  doc.text('Desarrollado por Rosa Elvira Velásquez · Petroceno', pageW/2, pageH - 5, { align:'center' });
+
+  doc.save(`Comidas_Empacadas_${fecha}.pdf`);
+  showToast('PDF exportado','success');
+}
+
+// ============================================================
+// PWA
+// ============================================================
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('pwaPrompt').classList.add('show');
+});
+document.getElementById('pwaInstallBtn').addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('pwaPrompt').classList.remove('show');
+    });
+  }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  await openDB();
+  const ok = await loadState();
+  if (!ok) {
+    state.areas = loadInitialData();
+    state.fechaActiva = '2026-09-28';
+    await saveState();
+  }
+  initDateBar();
+  showView('list');
+  setTimeout(async () => {
+    const hoy = todayISO();
+    const snaps = await listarSnapshots();
+    if (!snaps.some(s => s.fecha === hoy) && areasConDatos(state.areas, hoy).length > 0) {
+      await crearSnapshot(hoy, 'auto al abrir');
+    }
+  }, 1000);
+}
+
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
+});
+
+init();
+</script>
+</body>
+</html>
