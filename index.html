@@ -7,7 +7,7 @@
 <meta name="description" content="Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petrocedeño.">
 <title>Comedor Petrocedeño · Control de Comidas</title>
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json"><!-- la version nativa no lo usa; se deja para que el archivo siga sirviendo como PWA si se abre en un navegador -->
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -17,6 +17,8 @@
 
 <!-- Motor XLSX propio: 0 KB de CDN, funciona SIN INTERNET, respeta el formato original -->
 <script src="app-xlsx.js"></script>
+<script src="pdf/jspdf.umd.min.js"></script>
+<script src="pdf/jspdf.plugin.autotable.min.js"></script>
 <!-- jsPDF se carga bajo demanda solo al exportar PDF (ver cargarJsPDF) -->
 
 <style>
@@ -25,16 +27,13 @@
   --primary:#0d3b66;--primary-light:#1d5a99;--primary-soft:#e6eefb;--accent:#f4a261;
   --bg:#f4f7fc;--card:#fff;--text:#1a2433;--text-muted:#6b7c93;--border:#e2e9f5;
   --danger:#d64545;--success:#2e7d32;--warning:#e08a00;
+  --solido:#0d3b66;
   --shadow:0 4px 14px rgba(13,59,102,.08);
 }
 html,body{height:100%;overflow-x:hidden}
 body{background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column;min-height:100vh;max-width:520px;margin:0 auto;position:relative}
-/* --- Copiar/pegar solo dentro de los campos de entrada (diálogos de captura) --- */
-body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-input::placeholder,textarea::placeholder{-webkit-user-select:none;user-select:none}
 
-.app-header{background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:50;box-shadow:0 4px 12px rgba(13,59,102,.25)}
+.app-header{background:var(--solido);color:#fff;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;z-index:50;box-shadow:0 4px 12px rgba(13,59,102,.25)}
 .app-header .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
 .app-header .brand .logo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .app-header .brand-text{min-width:0}
@@ -53,7 +52,7 @@ input::placeholder,textarea::placeholder{-webkit-user-select:none;user-select:no
 .view{display:none;flex:1;flex-direction:column;padding-bottom:20px}
 .view.active{display:flex}
 
-.total-banner{margin:12px;padding:14px 16px;background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);position:relative;overflow:hidden}
+.total-banner{margin:12px;padding:14px 16px;background:var(--solido);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);position:relative;overflow:hidden}
 .total-banner::after{content:"🍱";position:absolute;right:-10px;bottom:-18px;font-size:70px;opacity:.12}
 .total-banner .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.85;font-weight:600}
 .total-banner .value{font-size:36px;font-weight:800;line-height:1;margin-top:4px}
@@ -76,7 +75,7 @@ input::placeholder,textarea::placeholder{-webkit-user-select:none;user-select:no
 
 .back-bar{padding:10px 14px 0}
 .back-btn{background:#fff;border:1px solid var(--border);color:var(--primary);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:var(--shadow)}
-.detail-header{margin:10px 12px;padding:14px 16px;background:linear-gradient(135deg,#0d3b66,#1d5a99);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.detail-header{margin:10px 12px;padding:14px 16px;background:var(--solido);color:#fff;border-radius:18px;box-shadow:0 8px 20px rgba(13,59,102,.25);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .detail-header .name{font-size:19px;font-weight:800;line-height:1.1}
 .detail-header .date{font-size:10px;opacity:.85;margin-top:2px}
 .detail-header .total-big{text-align:right;flex-shrink:0}
@@ -123,6 +122,7 @@ input::placeholder,textarea::placeholder{-webkit-user-select:none;user-select:no
 .btn-cancel{background:var(--primary-soft);color:var(--primary)}
 .btn-confirm{background:var(--primary);color:#fff}
 .btn-delete{background:#fdeaea;color:var(--danger);flex:0 0 50px!important}
+.modal .sub.pregunta{white-space:pre-line}
 
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--primary);color:#fff;padding:11px 18px;border-radius:30px;font-size:12px;font-weight:600;box-shadow:0 8px 20px rgba(13,59,102,.3);opacity:0;transition:.3s;z-index:200;white-space:nowrap;max-width:90%}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -149,10 +149,11 @@ html[data-theme="dark"]{
   --primary:#3d7fd0;--primary-light:#5b9ae0;--primary-soft:#16283f;--accent:#f4a261;
   --bg:#0b1220;--card:#111b2e;--text:#e6edf7;--text-muted:#93a4bd;--border:#22304a;
   --danger:#ff6b6b;--success:#4ade80;--warning:#fbbf24;
+  --solido:#0f2038;
   --shadow:0 4px 14px rgba(0,0,0,.45);
 }
 html[data-theme="dark"] body{background:var(--bg);color:var(--text)}
-html[data-theme="dark"] .app-header{background:linear-gradient(135deg,#0f2038,#173d68);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+html[data-theme="dark"] .app-header{background:var(--solido);box-shadow:0 4px 12px rgba(0,0,0,.4)}
 html[data-theme="dark"] .date-bar,
 html[data-theme="dark"] .back-btn,
 html[data-theme="dark"] .personal-box,
@@ -171,7 +172,8 @@ html[data-theme="dark"] .btn-warning{background:#3a2c10;color:var(--warning)}
 html[data-theme="dark"] .toast{background:#1b2a44;color:#fff}
 html[data-theme="dark"] .card,
 html[data-theme="dark"] .area-card{background:var(--card)}
-html[data-theme="dark"] .total-banner{background:linear-gradient(135deg,#0f2038,#1d4a7d);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+html[data-theme="dark"] .total-banner{background:var(--solido);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+html[data-theme="dark"] .detail-header{background:var(--solido);box-shadow:0 8px 20px rgba(0,0,0,.45)}
 html[data-theme="dark"] .modal-bg{background:rgba(2,6,16,.75)}
 html[data-theme="dark"] ::-webkit-scrollbar{width:8px;height:8px}
 html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radius:9px}
@@ -348,6 +350,29 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radi
   </div>
 </div>
 
+<div class="modal-bg" id="modalPregunta">
+  <div class="modal">
+    <h3>Comedor Petrocedeño</h3>
+    <p class="sub pregunta" id="modalPreguntaTexto"></p>
+    <label>Escribe:</label>
+    <input type="text" id="inputPregunta" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnPreguntaCancelar">Cancelar</button>
+      <button class="btn-confirm" id="btnPreguntaAceptar">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalConfirmar">
+  <div class="modal">
+    <h3>Confirmar</h3>
+    <p class="sub pregunta" id="modalConfirmarTexto"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnConfirmarNo">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirmarSi">Aceptar</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -357,7 +382,7 @@ html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#2c3d5c;border-radi
 // ============================================================
 // PERSISTENCIA IndexedDB
 // ============================================================
-const DB_NAME = 'comedor_petrocedeno';
+const DB_NAME = 'comedor_petroceno';
 const DB_VERSION = 1;
 const STORE_STATE = 'state';
 const STORE_SNAPSHOTS = 'snapshots';
@@ -424,7 +449,7 @@ function dbGetAll(store) {
 // ============================================================
 // ESTADO
 // ============================================================
-const STORAGE_FALLBACK_KEY = 'comedor_petrocedeno_v2';
+const STORAGE_FALLBACK_KEY = 'comedor_petroceno_v2';
 let state = { areas: [], fechaActiva: todayISO(), currentView: 'list', currentAreaId: null };
 
 function todayISO() { return new Date().toISOString().slice(0,10); }
@@ -436,7 +461,81 @@ function showToast(msg, type='') {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.className = 'toast ' + type, 2400);
 }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ============================================================
+//  PREGUNTAR Y CONFIRMAR, CON MODALES DE LA PROPIA PAGINA
+// ============================================================
+//  ESTO NO ES UN ADORNADO. En WebView2 los dialogos del navegador (prompt,
+//  confirm y alert) NO ABREN NADA y clavan el hilo de JavaScript de la pagina
+//  para siempre: la aplicacion entera se congela. El evento
+//  CoreWebView2.ScriptDialogOpening tampoco se dispara, asi que desde el
+//  programa no hay forma de contestarlos.
+//
+//  Por eso los seis sitios que los usaban ahora llaman a preguntar() y
+//  confirmar(). Los dos devuelven una promesa, y por eso los seis sitios
+//  tienen que poner await delante. No se puede evitar: un prompt() de verdad es
+//  sincrono, y un modal de la pagina no puede serlo, porque para que la
+//  persona escriba hace falta que el hilo de JavaScript este libre.
+//
+//  Lo que se ve es un modal como los otros cinco de la pagina: mismas clases,
+//  mismos colores, mismo tema oscuro. El unico cambio de estilo es
+//  .modal .sub.pregunta{white-space:pre-line}, para que los mensajes de varias
+//  lineas no salgan pegados.
+let __resolverPregunta = null;
+let __resolverConfirmar = null;
+
+function preguntar(texto, porOmision) {
+  return new Promise(function (resolve) {
+    document.getElementById('modalPreguntaTexto').textContent = texto;
+    const caja = document.getElementById('inputPregunta');
+    caja.value = (porOmision === null || porOmision === undefined) ? '' : String(porOmision);
+    __resolverPregunta = function (v) {
+      document.getElementById('modalPregunta').classList.remove('show');
+      __resolverPregunta = null;
+      resolve(v);
+    };
+    openModal('modalPregunta');
+    // El foco va con un margen. Si se pide en el mismo instante en que se
+    // muestra, el teclado se abre antes de tiempo y tapa el modal de golpe.
+    setTimeout(function () { caja.focus(); caja.select(); }, 80);
+  });
+}
+
+function confirmar(texto) {
+  return new Promise(function (resolve) {
+    document.getElementById('modalConfirmarTexto').textContent = texto;
+    __resolverConfirmar = function (v) {
+      document.getElementById('modalConfirmar').classList.remove('show');
+      __resolverConfirmar = null;
+      resolve(v);
+    };
+    openModal('modalConfirmar');
+  });
+}
+
+document.getElementById('btnPreguntaAceptar').addEventListener('click', function () {
+  if (__resolverPregunta) __resolverPregunta(document.getElementById('inputPregunta').value);
+});
+document.getElementById('btnPreguntaCancelar').addEventListener('click', function () {
+  if (__resolverPregunta) __resolverPregunta(null);
+});
+document.getElementById('inputPregunta').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnPreguntaAceptar').click(); }
+  else if (e.key === 'Escape') { e.preventDefault(); document.getElementById('btnPreguntaCancelar').click(); }
+});
+document.getElementById('btnConfirmarSi').addEventListener('click', function () {
+  if (__resolverConfirmar) __resolverConfirmar(true);
+});
+document.getElementById('btnConfirmarNo').addEventListener('click', function () {
+  if (__resolverConfirmar) __resolverConfirmar(false);
+});
+// Enter y Escape tambien funcionan en la confirmacion: es lo que espera cualquiera
+// que ya haya usado el teclado
+document.getElementById('modalConfirmar').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnConfirmarSi').click(); }
+  else if (e.key === 'Escape') { e.preventDefault(); document.getElementById('btnConfirmarNo').click(); }
+});
 function openModal(id) { document.getElementById(id).classList.add('show'); }
 
 function totalAreaFecha(area, fecha) {
@@ -626,19 +725,19 @@ function renderList() {
     });
   });
   list.querySelectorAll('.menu-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
+    btn.addEventListener('click', async e => {
       e.stopPropagation();
       const id = btn.dataset.menuId;
       const area = state.areas.find(a => a.id === id);
       if (!area) return;
-      const accion = prompt(`"${area.nombre}"\n\nEscribe:\n  "editar"\n  "eliminar"`, 'editar');
+      const accion = await preguntar(`"${area.nombre}"\n\nEscribe:\n  "editar"\n  "eliminar"`, 'editar');
       if (!accion) return;
       const a = accion.trim().toLowerCase();
       if (a === 'editar') {
-        const nuevo = prompt('Nuevo nombre:', area.nombre);
+        const nuevo = await preguntar('Nuevo nombre:', area.nombre);
         if (nuevo && nuevo.trim()) { area.nombre = nuevo.trim().toUpperCase(); saveState(); renderList(); showToast('Renombrada','success'); }
       } else if (a === 'eliminar') {
-        if (confirm(`¿Eliminar "${area.nombre}"?`)) { state.areas = state.areas.filter(x=>x.id!==id); saveState(); renderList(); showToast('Eliminada','error'); }
+        if (await confirmar(`¿Eliminar "${area.nombre}"?`)) { state.areas = state.areas.filter(x=>x.id!==id); saveState(); renderList(); showToast('Eliminada','error'); }
       }
     });
   });
@@ -694,9 +793,9 @@ function renderDetail() {
     inp.addEventListener('focus', e => e.target.select());
   });
   form.querySelectorAll('.label[data-label-idx]').forEach(lbl => {
-    lbl.addEventListener('click', () => {
+    lbl.addEventListener('click', async () => {
       const i = parseInt(lbl.dataset.labelIdx);
-      const n = prompt('Nombre del menú:', area.menus[i].nombre);
+      const n = await preguntar('Nombre del menú:', area.menus[i].nombre);
       if (n && n.trim()) { area.menus[i].nombre = n.trim().toUpperCase(); saveState(); renderDetail(); }
     });
   });
@@ -788,7 +887,7 @@ async function verSnapshot(id) {
   openModal('modalSnapshot');
 }
 async function restaurarSnapshot(snap) {
-  if (!confirm(`¿Restaurar datos del ${formatFecha(snap.fecha)}?`)) return;
+  if (!(await confirmar(`¿Restaurar datos del ${formatFecha(snap.fecha)}?`))) return;
   snap.areas.forEach(sa => {
     const area = state.areas.find(a => a.nombre === sa.nombre);
     if (area) {
@@ -886,7 +985,7 @@ document.getElementById('btnSaveArea').addEventListener('click', async () => {
 document.getElementById('btnSnapshots').addEventListener('click', () => showView('snapshots'));
 document.getElementById('btnDuplicateDate').addEventListener('click', async () => {
   const origen = state.fechaActiva;
-  const destino = prompt('¿A qué fecha duplicar?\n(YYYY-MM-DD)', todayISO());
+  const destino = await preguntar('¿A qué fecha duplicar?\n(YYYY-MM-DD)', todayISO());
   if (!destino || !/^\d{4}-\d{2}-\d{2}$/.test(destino)) { showToast('Fecha inválida','error'); return; }
   if (destino === origen) { showToast('Misma fecha','error'); return; }
   let c = 0;
@@ -953,7 +1052,7 @@ async function exportarExcel(incluirPersonal, incluirHistorico) {
 
   try {
     const bytes = XN.workbook(hojas);
-    descargarArchivo(bytes, `Comidas_Empacadas_${fecha}.xlsx`, XN.MIME_XLSX);
+    XN.descargar(bytes, `Comidas_Empacadas_${fecha}.xlsx`);
     showToast('Excel exportado · ' + hojas.length + ' hoja' + (hojas.length > 1 ? 's' : '') +
               ' · ' + totalGeneralFecha(state.areas, fecha) + ' almuerzos', 'success');
   } catch (e) {
@@ -965,29 +1064,26 @@ async function exportarExcel(incluirPersonal, incluirHistorico) {
 // ============================================================
 // PDF (con autoTable: encabezados azules + texto blanco garantizado)
 // ============================================================
-// jsPDF está EMBEBIDO en la carpeta vendor/ -> funciona SIEMPRE, sin internet.
-// Si por lo que sea no estuviera, se cae de vuelta al CDN.
+// jsPDF se carga SOLO al pedir PDF (requiere internet la 1era vez).
+// El Excel NO lo necesita: funciona 100% sin conexión.
 let _pdfCargando = null;
 function cargarJsPDF() {
-  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(true);
+  if (window.jspdf) return Promise.resolve(true);
   if (_pdfCargando) return _pdfCargando;
-  const local = [
-    'vendor/jspdf.umd.min.js',
-    'vendor/jspdf.plugin.autotable.min.js'
-  ];
-  const remoto = [
-    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
-    'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'
-  ];
-  const cadena = (urls, i) => new Promise(res => {
-    if (i >= urls.length) return res(false);
-    const s = document.createElement('script');
-    s.src = urls[i];
-    s.onload  = () => res(i + 1 >= urls.length ? true : cadena(urls, i + 1));
-    s.onerror = () => res(cadena(urls, i + 1));
-    document.head.appendChild(s);
+  const base = '';
+  _pdfCargando = new Promise(resolve => {
+    const s1 = document.createElement('script');
+    s1.src = 'pdf/jspdf.umd.min.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'pdf/jspdf.plugin.autotable.min.js';
+      s2.onload = () => resolve(true);
+      s2.onerror = () => resolve(false);
+      document.head.appendChild(s2);
+    };
+    s1.onerror = () => resolve(false);
+    document.head.appendChild(s1);
   });
-  _pdfCargando = cadena(local, 0).then(ok => ok || cadena(remoto, 0));
   return _pdfCargando;
 }
 
@@ -997,7 +1093,7 @@ async function exportarPDF(incluirPersonal) {
     showToast('Cargando motor PDF…');
     const ok = await cargarJsPDF();
     if (!ok || !window.jspdf) {
-      showToast('No se pudo cargar el motor PDF. El Excel funciona sin conexión.', 'error');
+      showToast('El PDF necesita internet la primera vez. El Excel funciona sin conexión.', 'error');
       return;
     }
   }
@@ -1020,7 +1116,7 @@ async function exportarPDF(incluirPersonal) {
   doc.setFontSize(10);
   doc.setFont('helvetica','normal');
   doc.setTextColor(60,60,60);
-  doc.text('COMEDOR ADMINISTRATIVO PETROCEDENO', pageW/2, y, { align:'center' });
+  doc.text('COMEDOR ADMINISTRATIVO PETROCEDEÑO', pageW/2, y, { align:'center' });
   y += 6;
   doc.setFont('helvetica','bold');
   doc.setFontSize(11);
@@ -1215,7 +1311,7 @@ async function exportarPDF(incluirPersonal) {
   doc.setTextColor(150,150,150);
   doc.text('Desarrollado por Rosa Elvira Velásquez · Petrocedeño', pageW/2, pageH - 5, { align:'center' });
 
-  descargarArchivo(new Uint8Array(doc.output('arraybuffer')), `Comidas_Empacadas_${fecha}.pdf`, 'application/pdf');
+  doc.save(`Comidas_Empacadas_${fecha}.pdf`);
   showToast('PDF exportado','success');
 }
 
@@ -1247,7 +1343,17 @@ function aplicarTema(t) {
   if (b) b.textContent = t === 'dark' ? '☀️' : '🌙';
   const m = document.getElementById('metaThemeColor');
   if (m) m.setAttribute('content', t === 'dark' ? '#0b1220' : '#0d3b66');
-  try { localStorage.setItem('comedor_tema', t); } catch (e) {}
+  try { localStorage.setItem('comedor_tema', t); } catch (e) {}
+  // ---- puente con la ventana nativa ----------------------------------------
+  // Solo existe cuando la pagina esta dentro del programa. Abierta en un
+  // navegador normal, la pagina sigue funcionando igual: la guarda lo evita.
+  try {
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage(JSON.stringify({
+        tipo: 'tema', tema: t, color: (t === 'dark' ? '#0f2038' : '#0d3b66')
+      }));
+    }
+  } catch (e) {}
 }
 document.getElementById('btnTema').addEventListener('click', () => {
   const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
@@ -1262,27 +1368,7 @@ aplicarTema(document.documentElement.getAttribute('data-theme') || 'light');
   if (enApp && p) p.classList.remove('show');
 })();
 
-// ============================================================
-// REGISTRO DEL SERVICE WORKER (solo http/https; en file:// no existe)
-// ============================================================
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => {
-        reg.addEventListener('updatefound', () => {
-          const nw = reg.installing;
-          if (!nw) return;
-          nw.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              showToast('Actualización lista · reinicia la app', 'success');
-            }
-          });
-        });
-        console.log('SW registrado:', reg.scope);
-      })
-      .catch(err => console.warn('SW error:', err));
-  });
-}
+
 
 // ============================================================
 // INIT
@@ -1321,127 +1407,6 @@ async function init() {
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('show'); });
 });
-
-// ============================================================
-// COPIAR / PEGAR / CORTAR: SOLO dentro de los campos de captura
-// ------------------------------------------------------------
-// Se permite copiar/pegar únicamente dentro de <input>, <textarea>
-// y elementos editables: es decir, exactamente donde el usuario
-// tiene que introducir números o texto. En cualquier otro lugar
-// (tablas, totales, nombres de área, menús, historial…) queda
-// bloqueado, igual que el menú contextual y Ctrl+C/X/V.
-// ============================================================
-(function bloquearPortapapeles() {
-  const OK = new Set(['INPUT', 'TEXTAREA']);
-
-  function editable(nodo) {
-    let el = nodo;
-    if (el && el.nodeType !== 1) el = el.parentElement;
-    while (el && el.nodeType === 1) {
-      if (OK.has(el.tagName)) {
-        const t = (el.type || '').toLowerCase();
-        // los que no admiten texto (checkbox, date, number...) no cuentan
-        return !['checkbox', 'radio', 'button', 'submit', 'range', 'color', 'file'].includes(t);
-      }
-      if (el.isContentEditable) return true;
-      el = el.parentElement;
-    }
-    return false;
-  }
-
-  let ultimoAviso = 0;
-  function avisar() {
-    const ahora = Date.now();
-    if (ahora - ultimoAviso < 2500) return;   // no spamear toasts
-    ultimoAviso = ahora;
-    showToast('Copiar y pegar solo se permite en los campos de captura', 'error');
-  }
-
-  const Stop = ['copy', 'cut', 'paste'];
-  Stop.forEach(ev => document.addEventListener(ev, e => {
-    const destino = e.target && e.target.nodeType === 1 ? e.target : document.activeElement;
-    if (!editable(destino) && !editable(document.activeElement)) { e.preventDefault(); avisar(); }
-  }, true));
-
-  // arrastre de texto fuera de la app
-  document.addEventListener('dragstart', e => {
-    if (!editable(e.target) && !editable(document.activeElement)) e.preventDefault();
-  }, true);
-
-  // menú contextual (click derecho / mantener pulsado)
-  document.addEventListener('contextmenu', e => {
-    if (editable(e.target)) return;          // en los campos sí se permite
-    e.preventDefault();
-  }, true);
-
-  // selección de texto fuera de los campos
-  document.addEventListener('selectstart', e => {
-    if (!editable(e.target)) e.preventDefault();
-  }, true);
-
-  // atajos de teclado (Ctrl/⌘ + C, X, V, A)
-  document.addEventListener('keydown', e => {
-    if (!(e.ctrlKey || e.metaKey)) return;
-    const k = (e.key || '').toLowerCase();
-    if (!['c', 'x', 'v', 'a'].includes(k)) return;
-    if (editable(document.activeElement) || editable(e.target)) return;
-    e.preventDefault();
-    avisar();
-  }, true);
-})();
-
-// ============================================================
-// GUARDAR ARCHIVOS (Excel / PDF)
-// ------------------------------------------------------------
-// En navegador o PWA se descarga normal. Cuando la app corre
-// empaquetada (.exe con WebView2 o .apk con WebView), delega en
-// el puente nativo para que el archivo caiga en la carpeta que
-// el usuario tiene asignada en su teléfono / computador.
-// ============================================================
-function bytesABase64(bytes) {
-  let bin = '';
-  const LOTE = 0x8000;
-  for (let i = 0; i < bytes.length; i += LOTE) {
-    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + LOTE));
-  }
-  return btoa(bin);
-}
-
-function descargarArchivo(bytes, nombre, mime) {
-  const N = window.ComedorNativo;
-  if (N && typeof N.guardarArchivo === 'function') {
-    try {
-      N.guardarArchivo(bytesABase64(bytes), nombre);
-      return true;
-    } catch (e) {
-      console.warn('Puente nativo falló, se usa la descarga del navegador:', e);
-    }
-  }
-  const url = URL.createObjectURL(new Blob([bytes], { type: mime || 'application/octet-stream' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = nombre;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return true;
-}
-
-// Respuesta del puente nativo (.exe / .apk): "guardado" o error
-window.comedorRespuestaNativa = function (mensaje) {
-  if (mensaje && /error/i.test(mensaje)) showToast(mensaje, 'error');
-};
-
-// Botón "atrás" de Android: cierra el diálogo abierto, o vuelve al
-// listado; si ya está en el listado, la app nativa se cierra.
-window.comedorAtras = function () {
-  const abierto = document.querySelector('.modal-bg.show');
-  if (abierto) { abierto.classList.remove('show'); return true; }
-  if (state.currentView === 'detail') { showView('list'); return true; }
-  if (state.currentView === 'snapshots') { showView('list'); return true; }
-  return false;
-};
 
 init();
 </script>

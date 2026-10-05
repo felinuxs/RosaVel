@@ -1,8 +1,8 @@
 {
   "id": "/comedor-petroceno/",
-  "name": "Comedor Petroceno · Control de Comidas",
+  "name": "Comedor Petrocedeño · Control de Comidas",
   "short_name": "Comedor",
-  "description": "Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petroceno. Funciona sin internet.",
+  "description": "Aplicativo para el control diario de comidas empacadas del Comedor Administrativo Petrocedeño. Funciona sin internet.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
